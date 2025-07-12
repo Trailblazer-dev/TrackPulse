@@ -95,3 +95,63 @@ class CountryAnalyticsSerializer(serializers.Serializer):
     total_sales = serializers.DecimalField(max_digits=15, decimal_places=2)
     customer_count = serializers.IntegerField()
     average_customer_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+
+class TopArtistSerializer(serializers.Serializer):
+    """Serializer for top artist analytics"""
+    artist_id = serializers.IntegerField()
+    name = serializers.CharField()
+    total_sales = serializers.DecimalField(max_digits=15, decimal_places=2)
+    total_tracks = serializers.IntegerField()
+    total_albums = serializers.IntegerField()
+
+
+class TopAlbumSerializer(serializers.Serializer):
+    """Serializer for top album analytics"""
+    album_id = serializers.IntegerField()
+    title = serializers.CharField()
+    artist = ArtistSerializer()
+    total_sales = serializers.DecimalField(max_digits=15, decimal_places=2)
+    track_count = serializers.IntegerField()
+
+
+class TopTrackSerializer(serializers.Serializer):
+    """Serializer for top track analytics"""
+    track_id = serializers.IntegerField()
+    name = serializers.CharField()
+    album = AlbumSerializer()
+    genre = GenreSerializer()
+    total_sold = serializers.IntegerField()
+    total_revenue = serializers.DecimalField(max_digits=15, decimal_places=2)
+
+
+class TopCustomerSerializer(serializers.Serializer):
+    """Serializer for top customer analytics"""
+    customer_id = serializers.IntegerField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
+    country = serializers.CharField()
+    total_spent = serializers.DecimalField(max_digits=15, decimal_places=2)
+    total_orders = serializers.IntegerField()
+
+
+class DashboardSummarySerializer(serializers.Serializer):
+    """Serializer for dashboard summary data"""
+    total_customers = serializers.IntegerField()
+    total_tracks = serializers.IntegerField()
+    total_artists = serializers.IntegerField()
+    total_albums = serializers.IntegerField()
+    total_revenue = serializers.DecimalField(max_digits=15, decimal_places=2)
+    total_orders = serializers.IntegerField()
+    average_order_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    recent_orders = serializers.ListField()
+
+
+class SearchResultSerializer(serializers.Serializer):
+    """Serializer for search results"""
+    artists = ArtistSerializer(many=True)
+    albums = AlbumSerializer(many=True)
+    tracks = TrackSerializer(many=True)
+    customers = CustomerSerializer(many=True)
+    total_results = serializers.IntegerField()
