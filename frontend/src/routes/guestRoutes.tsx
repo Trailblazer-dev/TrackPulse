@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
+import GuestLayout from '../layouts/GuestLayout';
 
 // Lazy load guest pages
 const Landing = lazy(() => import('../pages/guest/Landing'));
@@ -10,18 +11,34 @@ const Explore = lazy(() => import('../pages/guest/Explore'));
 export const guestRoutes: RouteObject[] = [
   {
     path: '/',
-    element: <Landing />,
+    element: (
+      <GuestLayout>
+        <Landing />
+      </GuestLayout>
+    ),
   },
   {
     path: '/about',
-    element: <About />,
+    element: (
+      <GuestLayout>
+        <About />
+      </GuestLayout>
+    ),
   },
   {
     path: '/contact',
-    element: <Contact />,
+    element: (
+      <GuestLayout>
+        <Contact />
+      </GuestLayout>
+    ),
   },
   {
     path: '/explore',
-    element: <Explore />,
+    element: (
+      <GuestLayout>
+        <Explore />
+      </GuestLayout>
+    ),
   },
 ];

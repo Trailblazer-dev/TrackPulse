@@ -1,5 +1,7 @@
 import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
+import UserLayout from '../layouts/UserLayout';
+import Setting from '../components/reuse/Setting';
 
 // Lazy load user pages
 const Dashboard = lazy(() => import('../pages/user/Dashboard'));
@@ -10,18 +12,42 @@ const Bookmarks = lazy(() => import('../pages/user/Bookmarks'));
 export const userRoutes: RouteObject[] = [
   {
     path: '/dashboard',
-    element: <Dashboard />,
+    element: (
+      <UserLayout>
+        <Dashboard />
+      </UserLayout>
+    ),
   },
   {
     path: '/analytics',
-    element: <Analytics />,
+    element: (
+      <UserLayout>
+        <Analytics />
+      </UserLayout>
+    ),
   },
   {
     path: '/reports',
-    element: <Reports />,
+    element: (
+      <UserLayout>
+        <Reports />
+      </UserLayout>
+    ),
   },
   {
     path: '/bookmarks',
-    element: <Bookmarks />,
+    element: (
+      <UserLayout>
+        <Bookmarks />
+      </UserLayout>
+    ),
   },
+  {
+    path: '/settings',
+    element: (
+      <UserLayout>  
+        <Setting />
+      </UserLayout> 
+    ),
+  }
 ];

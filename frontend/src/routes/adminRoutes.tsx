@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import type { RouteObject } from 'react-router-dom';
+import AdminLayout from '../layouts/AdminLayout';
 
 // Lazy load admin pages
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
@@ -12,26 +13,50 @@ const ReportBuilder = lazy(() => import('../pages/admin/ReportBuilder'));
 export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
-    element: <AdminDashboard />,
+    element: (
+      <AdminLayout>
+        <AdminDashboard />
+      </AdminLayout>
+    ),
   },
   {
     path: '/admin/users',
-    element: <Users />,
+    element: (
+      <AdminLayout>
+        <Users />
+      </AdminLayout>
+    ),
   },
   {
     path: '/admin/metrics',
-    element: <SystemMetrics />,
+    element: (
+      <AdminLayout>
+        <SystemMetrics />
+      </AdminLayout>
+    ),
   },
   {
     path: '/admin/audit-logs',
-    element: <AuditLogs />,
+    element: (
+      <AdminLayout>
+        <AuditLogs />
+      </AdminLayout>
+    ),
   },
   {
     path: '/admin/data-management',
-    element: <DataManagement />,
+    element: (
+      <AdminLayout>
+        <DataManagement />
+      </AdminLayout>
+    ),
   },
   {
     path: '/admin/report-builder',
-    element: <ReportBuilder />,
+    element: (
+      <AdminLayout>
+        <ReportBuilder />
+      </AdminLayout>
+    ),
   },
 ];
