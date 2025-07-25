@@ -3,12 +3,14 @@ import { Routes, Route } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 import Spinner from '../components/common/Spinner';
 import { guestRoutes } from './guestRoutes';
+import { authRoutes } from './authRoutes';
 import { userRoutes } from './userRoutes';
 import { adminRoutes } from './adminRoutes';
 
 // Combine all routes
 const allRoutes: RouteObject[] = [
   ...guestRoutes,
+  ...authRoutes,
   ...userRoutes,
   ...adminRoutes,
 ];

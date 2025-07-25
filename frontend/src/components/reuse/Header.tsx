@@ -1,32 +1,7 @@
 import { Menu, Bell, Settings, LogOut } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import ThemeToggle from '../common/ThemeToggle'
-
-interface HeaderConfig {
-  theme: 'guest' | 'user' | 'admin'
-  logo: {
-    src: string
-    alt: string
-    text: string
-  }
-  navigation?: Array<{
-    name: string
-    href: string
-    current?: boolean
-  }>
-  user?: {
-    name: string
-    avatar: string
-    role?: string
-  }
-  showAuthButtons?: boolean
-  authLinks?: Array<{
-    text: string
-    href: string
-    variant?: 'primary' | 'secondary'
-  }>
-  onSidebarToggle?: () => void
-  isSidebarOpen?: boolean
-}
+import type { HeaderConfig } from './headerConfigs'
 
 interface HeaderProps {
   config?: HeaderConfig
@@ -51,6 +26,43 @@ const Header = ({ config }: HeaderProps) => {
 
   const headerConfig = config || defaultConfig
 
+  // Helper to render auth links
+  const renderAuthLink = (link: { text: string; href: string; variant?: 'primary' | 'secondary' }, index: number) => (
+    <a
+      key={index}
+      href={link.href}
+      className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 transform hover:scale-105 ${
+        link.variant === 'primary'
+          ? 'auth-button-primary text-white shadow-themed-sm'
+          : 'auth-button-secondary text-themed hover:text-white border border-themed/20'
+      }`}
+    >
+      {link.text}
+    </a>
+  )
+
+  // Reusable icon button component
+  const IconButton = ({ 
+    icon: Icon, 
+    title, 
+    onClick, 
+    className 
+  }: { 
+    icon: LucideIcon, 
+    title: string, 
+    onClick?: () => void, 
+    className: string 
+  }) => (
+    <button 
+      className={`p-2 rounded-lg transition-all duration-200 transform hover:scale-105 ${className}`}
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+    >
+      <Icon className="h-5 w-5" />
+    </button>
+  )
+
   const getThemeClasses = () => {
     switch (headerConfig.theme) {
       case 'admin':
@@ -69,13 +81,21 @@ const Header = ({ config }: HeaderProps) => {
           userMenu: 'bg-blue-700 hover:bg-blue-800',
           badge: 'bg-blue-800 text-white'
         }
+      case 'auth':
+        return {
+          header: 'header-auth shadow-themed-sm',
+          logo: 'text-primary font-bold',
+          nav: 'text-muted hover:text-primary',
+          userMenu: 'surface hover:bg-themed/5 border border-themed/20',
+          badge: 'bg-primary/10 text-primary border border-primary/20'
+        }
       default:
         return {
-          header: 'header-guest shadow-md',
-          logo: 'text-primary',
+          header: 'header-guest shadow-themed-md',
+          logo: 'text-primary font-bold',
           nav: 'text-muted hover:text-primary',
-          userMenu: 'surface hover:bg-surface',
-          badge: 'surface text-primary'
+          userMenu: 'surface hover:bg-themed/5 border border-themed/20',
+          badge: 'surface text-primary border border-themed/20'
         }
     }
   }
@@ -88,28 +108,30 @@ const Header = ({ config }: HeaderProps) => {
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Left side - Sidebar toggle and Logo */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Sidebar Toggle Button - Mobile/Tablet */}
-            <button
-              onClick={headerConfig.onSidebarToggle}
-              className={`md:hidden p-1.5 sm:p-2 rounded-lg transition-colors ${themeClasses.userMenu}`}
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
+            {/* Sidebar Toggle Button - Mobile/Tablet (hide for auth pages) */}
+            {headerConfig.theme !== 'auth' && (
+              <button
+                onClick={headerConfig.onSidebarToggle}
+                className={`md:hidden p-1.5 sm:p-2 rounded-lg transition-all duration-200 transform hover:scale-105 ${themeClasses.userMenu}`}
+                aria-label="Toggle sidebar"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
             
-            {/* Logo */}
-            <a href="/" className="flex items-center space-x-2 sm:space-x-3">
+            {/* Logo and Breadcrumb Navigation */}
+            <a href="/" className="flex items-center space-x-2 sm:space-x-3 group auth-header-logo">
               <img 
                 src={headerConfig.logo.src}
                 alt={headerConfig.logo.alt}
-                className="h-6 sm:h-8 w-auto"
+                className="h-6 sm:h-8 w-auto transition-transform duration-200 group-hover:scale-105"
               />
               <div className="flex items-center space-x-2">
-                <span className={`hidden sm:block text-base sm:text-lg lg:text-xl font-bold ${themeClasses.logo}`}>
-                  {headerConfig.logo.text}
+                <span className={`hidden sm:block text-base sm:text-lg lg:text-xl font-bold transition-colors duration-200 ${themeClasses.logo}`}>
+                  {headerConfig.customTitle || headerConfig.logo.text}
                 </span>
                 {headerConfig.user?.role && (
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase ${themeClasses.badge}`}>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase transition-all duration-200 ${themeClasses.badge}`}>
                     {headerConfig.user.role}
                   </span>
                 )}
@@ -117,65 +139,56 @@ const Header = ({ config }: HeaderProps) => {
             </a>
           </div>
 
-          {/* no need for naviation link is coverd in sidebar */}
-
-          {/* Right side content */}
+          {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
-            {/* Theme Toggle */}
+            {/* Theme Toggle - Always visible */}
             <ThemeToggle />
 
             {/* User Menu for authenticated users */}
             {headerConfig.user && (
               <>
-                <button 
-                  className={`p-2 rounded-lg transition-colors ${themeClasses.userMenu}`}
+                <IconButton
+                  icon={Bell}
                   title="Notifications"
-                  aria-label="Notifications"
-                >
-                  <Bell className="h-5 w-5" />
-                </button>
-                <button 
-                  className={`p-2 rounded-lg transition-colors ${themeClasses.userMenu}`}
+                  className={themeClasses.userMenu}
+                />
+                <IconButton
+                  icon={Settings}
                   title="Settings"
-                  aria-label="Settings"
-                >
-                  <Settings className="h-5 w-5" />
-                </button>
+                  className={themeClasses.userMenu}
+                />
                 <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${themeClasses.badge}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${themeClasses.badge}`}>
                     {headerConfig.user.avatar}
                   </div>
-                  <span className={`text-sm font-medium hidden sm:block ${themeClasses.logo}`}>
+                  <span className={`text-sm font-medium hidden sm:block transition-colors duration-200 ${themeClasses.logo}`}>
                     {headerConfig.user.name}
                   </span>
                 </div>
-                <button 
-                  className={`p-2 rounded-lg transition-colors ${themeClasses.userMenu}`}
+                <IconButton
+                  icon={LogOut}
                   title="Logout"
-                  aria-label="Logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
+                  className={themeClasses.userMenu}
+                />
               </>
             )}
 
-            {/* Auth buttons for guests */}
-            {headerConfig.showAuthButtons && headerConfig.authLinks && (
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                {headerConfig.authLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.href}
-                    className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm ${
-                      link.variant === 'primary'
-                        ? 'btn-primary shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
-                        : 'surface border hover:border-blue-300'
-                    }`}
+            {/* Auth buttons and navigation */}
+            {!headerConfig.hideAuthButtons && (
+              <>
+                {headerConfig.showAuthButtons && headerConfig.authLinks ? (
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    {headerConfig.authLinks.map(renderAuthLink)}
+                  </div>
+                ) : headerConfig.theme === 'auth' && (
+                  <a 
+                    href="/" 
+                    className="text-sm text-muted hover:text-primary transition-all duration-200 flex items-center space-x-1 transform hover:scale-105"
                   >
-                    {link.text}
+                    <span>← Home</span>
                   </a>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </div>

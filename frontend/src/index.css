@@ -170,6 +170,27 @@ body {
     animation-duration: 0.8s;
 }
 
+/* Themed utility classes for consistency */
+.text-themed {
+    color: var(--color-text);
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.bg-themed {
+    background-color: var(--bg-surface);
+}
+
+.border-themed {
+    border-color: var(--color-border);
+}
+
 /* Root theme variables */
 :root {
     /* Light theme colors */
@@ -358,6 +379,62 @@ main {
     background: linear-gradient(to right, #dc2626, #b91c1c);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+}
+
+/* Enhanced auth header styling */
+.header-auth {
+    background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(255, 255, 255, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+:root.dark .header-auth {
+    background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(30, 41, 59, 0.95) 100%);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Auth header interactions */
+.auth-header-logo:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+.auth-breadcrumb {
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.auth-breadcrumb:hover {
+    opacity: 1;
+}
+
+/* Enhanced auth button styling */
+.auth-button-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+    transition: all 0.2s ease;
+}
+
+.auth-button-primary:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+}
+
+.auth-button-secondary {
+    border: 1px solid var(--color-border);
+    background: var(--bg-surface);
+    transition: all 0.2s ease;
+}
+
+.auth-button-secondary:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-1px);
 }
 
 /* Dark mode specific gradients */
@@ -641,215 +718,6 @@ footer {
     border-top: 1px solid var(--color-muted);
 }
 
-/* Footer links */
-.footer-link {
-    color: var(--color-muted);
-    transition: color 0.2s ease-in-out;
-}
-
-.footer-link:hover {
-    color: var(--color-primary);
-}
-
-/* Social links */
-.social-link {
-    color: var(--color-muted);
-    transition: all 0.2s ease-in-out;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-}
-
-.social-link:hover {
-    color: var(--color-primary);
-    background-color: var(--bg-surface);
-}
-
-/* Newsletter input */
-.newsletter-input {
-    background-color: var(--bg-surface);
-    border-color: var(--color-muted);
-    color: var(--color-text);
-}
-
-.newsletter-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
-}
-
-/* Gradient text for footer */
-.gradient-text-white {
-    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Dark theme specific footer adjustments */
-:root.dark .footer-section {
-    border-top: 1px solid #334155;
-}
-
-/* Input styles */
-input, textarea, select {
-    background-color: var(--bg-surface);
-    border-color: var(--color-muted);
-    color: var(--color-text);
-}
-
-input:focus, textarea:focus, select:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
-}
-
-/* Dark mode input overrides */
-:root.dark input:not([type="submit"]):not([type="button"]),
-:root.dark textarea,
-:root.dark select {
-    background-color: #1e293b;
-    border-color: #475569;
-}
-
-/* Ensure dark mode classes work properly */
-@media (prefers-color-scheme: dark) {
-    :root:not(.light) {
-        --bg-primary: #0F172A;
-        --bg-surface: #1E293B;
-        --color-primary: #60A5FA;
-        --color-text: #F8FAFC;
-        --color-muted: #334155;
-        --header-bg: #0F172A;
-        --sidebar-bg: #0F172A;
-        --footer-bg: #020617;
-    }
-}
-
-/* Landing page specific styles */
-.light-theme-gradient {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-surface) 50%, var(--bg-primary) 100%);
-}
-
-.landing-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--color-muted);
-    transition: all 0.3s ease;
-}
-
-.landing-card:hover {
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-/* Light theme hero section */
-.hero-light {
-    background: linear-gradient(135deg, #F5F7FA 0%, #FFFFFF 50%, #F5F7FA 100%);
-}
-
-/* Button animations for landing page */
-.landing-btn {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.landing-btn:hover {
-    transform: translateY(-2px) scale(1.02);
-}
-
-/* Footer CTA Section */
-.footer-cta {
-    background: linear-gradient(135deg, #A1A3A5 0%, #A1A3A5 60%, transparent 85%);
-    position: relative;
-}
-
-.footer-cta::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 10%;
-    transform: translateY(-50%);
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, #718EBF 30%, rgba(113, 142, 191, 0.3) 60%, transparent 80%);
-    border-radius: 50%;
-    opacity: 0.6;
-    z-index: 1;
-}
-
-@media (max-width: 1024px) {
-    .footer-cta {
-        background: linear-gradient(180deg, #A1A3A5 0%, #A1A3A5 70%, transparent 100%);
-    }
-    
-    .footer-cta::after {
-        top: 80%;
-        right: 50%;
-        transform: translateX(50%);
-        width: 150px;
-        height: 150px;
-    }
-}
-
-/* Sphere Button */
-.cta-sphere-button {
-    background-color: #718EBF;
-    padding: 1rem 2rem;
-    border-radius: 50px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(113, 142, 191, 0.3);
-    position: relative;
-    z-index: 10;
-}
-
-.cta-sphere-button:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(113, 142, 191, 0.4);
-}
-
-.sphere-gradient {
-    background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.2) 0%,
-        transparent 50%,
-        rgba(0, 0, 0, 0.1) 100%);
-    border-radius: inherit;
-    transition: all 0.3s ease;
-}
-
-.cta-sphere-button:hover .sphere-gradient {
-    background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.3) 0%,
-        transparent 50%,
-        rgba(0, 0, 0, 0.15) 100%);
-}
-
-/* Responsive adjustments for sphere button */
-@media (max-width: 640px) {
-    .cta-sphere-button {
-        padding: 0.875rem 1.5rem;
-        font-size: 0.875rem;
-    }
-}
-
-/* Footer styling */
-footer {
-    background-color: var(--footer-bg);
-}
-
-/* Footer sections styling */
-.footer-section {
-    background-color: var(--footer-bg);
-    color: var(--color-text);
-}
-
-.footer-main {
-    background-color: var(--bg-surface);
-    color: var(--color-text);
-}
-
-/* Dark theme footer main */
-:root.dark .footer-main {
-    background-color: var(--footer-bg);
-}
-
 .footer-link {
     color: var(--color-muted);
     transition: all 0.2s ease-in-out;
@@ -857,7 +725,6 @@ footer {
 
 .footer-link:hover {
     color: var(--color-primary);
-    transform: translateX(2px);
 }
 
 .social-link {
@@ -870,7 +737,6 @@ footer {
 .social-link:hover {
     color: var(--color-primary);
     background-color: var(--bg-surface);
-    transform: translateY(-2px);
 }
 
 .newsletter-input {
@@ -916,4 +782,432 @@ footer {
     :root.dark .footer-cta {
         background: linear-gradient(180deg, #334155 0%, #334155 70%, transparent 100%) !important;
     }
+}
+
+/* Password strength indicator */
+[data-strength="25"] {
+    width: 25%;
+}
+
+[data-strength="50"] {
+    width: 50%;
+}
+
+[data-strength="75"] {
+    width: 75%;
+}
+
+[data-strength="100"] {
+    width: 100%;
+}
+
+/* ============================================================
+   SIGNIN PAGE ANIMATIONS
+   ============================================================ */
+
+/* Shake animation for error messages */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+    20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+.animate-shake {
+    animation: shake 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Enhanced fade in up animation */
+@keyframes fadeInUpEnhanced {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUpEnhanced 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Floating elements animation */
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg);
+    }
+    33% { 
+        transform: translateY(-10px) rotate(1deg);
+    }
+    66% { 
+        transform: translateY(5px) rotate(-1deg);
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Pulse with glow effect */
+@keyframes pulseGlow {
+    0%, 100% { 
+        opacity: 0.6;
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    50% { 
+        opacity: 1;
+        transform: scale(1.05);
+        box-shadow: 0 0 0 20px rgba(59, 130, 246, 0);
+    }
+}
+
+.animate-pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+}
+
+/* Loading shimmer effect */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.animate-shimmer {
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        transparent 100%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Enhanced button ripple effect */
+@keyframes buttonRipple {
+    0% {
+        transform: scale(0);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.btn-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-ripple::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.btn-ripple:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Success message animation */
+@keyframes successBounce {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-5px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-success-bounce {
+    animation: successBounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Animation delay utilities */
+[data-delay="1000ms"] { animation-delay: 1000ms; }
+[data-delay="1100ms"] { animation-delay: 1100ms; }
+[data-delay="1200ms"] { animation-delay: 1200ms; }
+[data-delay="1300ms"] { animation-delay: 1300ms; }
+
+/* Mobile responsive animations */
+@media (max-width: 768px) {
+    .animate-fade-in-up {
+        animation-duration: 0.4s;
+    }
+    
+    /* Reduce motion for mobile performance */
+    .group-hover\\:scale-105:hover {
+        transform: scale(1.02);
+    }
+}
+
+/* ============================================================
+   DARK MODE ENHANCEMENTS FOR AUTH PAGES
+   ============================================================ */
+
+/* Dark mode form elements */
+@media (prefers-color-scheme: dark) {
+    /* Enhanced form inputs in dark mode */
+    input[type="email"], 
+    input[type="password"], 
+    input[type="text"] {
+        background-color: rgb(31, 41, 55);
+        border-color: rgb(75, 85, 99);
+        color: rgb(243, 244, 246);
+    }
+    
+    input[type="email"]:focus, 
+    input[type="password"]:focus, 
+    input[type="text"]:focus {
+        border-color: rgb(59, 130, 246);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Dark mode checkbox styling */
+    input[type="checkbox"] {
+        background-color: rgb(31, 41, 55);
+        border-color: rgb(75, 85, 99);
+    }
+    
+    input[type="checkbox"]:checked {
+        background-color: rgb(59, 130, 246);
+        border-color: rgb(59, 130, 246);
+    }
+}
+
+/* Enhanced theme transitions for auth pages */
+.auth-theme-transition {
+    transition: 
+        background-color 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        border-color 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        color 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        box-shadow 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Dark mode shadow enhancements */
+.dark .shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.dark .shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* Enhanced hover states for dark mode */
+.dark .hover\\:shadow-lg:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode button glows */
+.dark .focus\\:ring-blue-500:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.dark .focus\\:ring-blue-400:focus {
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+}
+
+/* Smooth theme switching animation */
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+    transition: none !important;
+    animation-duration: 0ms !important;
+}
+
+/* Loading state improvements for dark mode */
+.dark .animate-pulse {
+    animation: darkPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes darkPulse {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ============================================================
+   AUTH PAGE ENHANCEMENTS
+   ============================================================ */
+
+/* Vinyl record animation */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* Enhanced button styling for auth forms */
+.auth-submit-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background-image: linear-gradient(to right, #2563eb, #4f46e5);
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+  transform: translateY(0) scale(1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.auth-submit-button:hover {
+  background-image: linear-gradient(to right, #1d4ed8, #4338ca);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.auth-submit-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #3b82f6;
+}
+
+.auth-submit-button:active {
+  transform: scale(0.98);
+}
+
+.auth-submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark mode enhancements for auth pages */
+.dark .auth-submit-button {
+  background-image: linear-gradient(to right, #3b82f6, #6366f1);
+}
+
+.dark .auth-submit-button:hover {
+  background-image: linear-gradient(to right, #2563eb, #4f46e5);
+}
+
+.dark .auth-submit-button:focus {
+  box-shadow: 0 0 0 2px #1e293b, 0 0 0 4px #60a5fa;
+}
+
+/* Music icon styling */
+.music-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Music icon pulse animation */
+@keyframes icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+.animate-icon-pulse {
+  animation: icon-pulse 2s ease-in-out infinite;
+}
+
+/* Accessible focus styles for form inputs */
+.auth-form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.dark .auth-form-input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
+}
+
+/* High contrast button text for better accessibility */
+.auth-button-text {
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.dark .auth-button-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Improved mobile form responsiveness */
+@media (max-width: 640px) {
+  .auth-submit-button {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .auth-form-input {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+}
+
+/* Reduced motion preference support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin-slow {
+    animation: none;
+  }
+  
+  .animate-bounce, 
+  .animate-ping,
+  .animate-pulse,
+  .animate-icon-pulse {
+    animation: none;
+  }
+}
+
+/* Waveform animation for music visualizations */
+@keyframes waveform {
+  0%, 100% {
+    height: 4px;
+  }
+  50% {
+    height: 16px;
+  }
+}
+
+.animate-waveform {
+  animation: waveform 1s ease-in-out infinite;
 }
