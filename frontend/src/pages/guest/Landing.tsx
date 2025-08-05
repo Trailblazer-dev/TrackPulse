@@ -276,7 +276,7 @@ const Landing = () => {
               {/* Enhanced CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                 <a 
-                  href="/explore" 
+                  href="/register" 
                   className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-base sm:text-lg rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   <span className="relative z-10">{hero.cta1}</span>
@@ -285,7 +285,7 @@ const Landing = () => {
                   </svg>
                 </a>
                 <a 
-                  href="/about" 
+                  href="/explore" 
                   className={`group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 backdrop-blur-sm font-semibold text-base sm:text-lg rounded-xl border-2 transform hover:scale-105 transition-all duration-300 ${
                     theme === 'dark'
                       ? 'bg-slate-800/60 text-blue-400 border-slate-600 hover:border-blue-500 hover:bg-slate-700/60'

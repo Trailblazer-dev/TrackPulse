@@ -9,6 +9,7 @@ const SystemMetrics = lazy(() => import('../pages/admin/SystemMetrics'));
 const AuditLogs = lazy(() => import('../pages/admin/AuditLogs'));
 const DataManagement = lazy(() => import('../pages/admin/DataManagement'));
 const ReportBuilder = lazy(() => import('../pages/admin/ReportBuilder'));
+const Settings = lazy(() => import('../components/reuse/Setting'));
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -59,4 +60,12 @@ export const adminRoutes: RouteObject[] = [
       </AdminLayout>
     ),
   },
+  {
+    path: '/admin/settings',
+    element: (
+      <AdminLayout>
+        <Settings />
+      </AdminLayout>
+    ),
+  }
 ];

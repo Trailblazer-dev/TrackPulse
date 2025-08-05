@@ -21,13 +21,13 @@ const ThemeTransitionOverlay: React.FC<ThemeTransitionOverlayProps> = ({ isVisib
           : 'radial-gradient(circle at center, rgba(245, 247, 250, 0.7) 0%, rgba(245, 247, 250, 0.4) 50%, transparent 100%)',
       }}
     >
-      {/* Animated ripple effect */}
+      {/* Animated ripple effect (The circle see when one toggle the theme) */}
       <div
         className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
       >
         <div
           className={`
-            w-32 h-32 rounded-full border-2 animate-ping
+            w-32 h-32 rounded-full border-2 animate-theme-ripple
             ${theme === 'dark' ? 'border-blue-400' : 'border-blue-600'}
           `}
           style={{

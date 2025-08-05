@@ -1,6 +1,10 @@
-import { Menu, Bell, Settings, LogOut } from 'lucide-react'
+import { Menu, Bell, Settings, LogOut, ChevronDown, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
 import ThemeToggle from '../common/ThemeToggle'
+import { header as guestHeader } from '../../utils/guest/guest'
+import { header as userHeader } from '../../utils/user/user'
+import { header as adminHeader } from '../../utils/admin/admin'
 import type { HeaderConfig } from './headerConfigs'
 
 interface HeaderProps {
@@ -8,23 +12,84 @@ interface HeaderProps {
 }
 
 const Header = ({ config }: HeaderProps) => {
-  // Default guest configuration if none provided
-  const defaultConfig: HeaderConfig = {
-    theme: 'guest',
-    logo: {
-      src: '/logo.png',
-      alt: 'TrackPulse Logo',
-      text: 'TrackPulse'
-    },
-    // no need for navigation link that the work of sidebar
-    showAuthButtons: true,
-    authLinks: [
-      { text: 'Sign In', href: '/signin', variant: 'secondary' },
-      { text: 'Register', href: '/register', variant: 'primary' }
-    ]
-  }
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const headerConfig = config || defaultConfig
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Determine which header config to use based on route if not explicitly provided
+  let headerConfig: any = config
+  if (!headerConfig) {
+    const path = window.location.pathname
+    const userPrefixes = ['/dashboard', '/analytics', '/reports', '/bookmarks', '/settings']
+    const adminPrefixes = ['/admin', '/admin/users', '/admin/metrics', '/admin/data-management', '/admin/report-builder', '/admin/audit-logs']
+    if (adminPrefixes.some(prefix => path.startsWith(prefix))) {
+      headerConfig = {
+        theme: 'admin',
+        logo: {
+          src: adminHeader.logo,
+          alt: 'TrackPulse Logo',
+          text: 'TrackPulse'
+        },
+        user: {
+          name: adminHeader.profile?.name ?? 'Admin',
+          avatar: adminHeader.profile?.avatar ?? 'A',
+          role: adminHeader.profile?.showAdminBadge ? 'ADMIN' : undefined,
+          dropdown: adminHeader.profile?.dropdown ?? []
+        },
+        showAuthButtons: false,
+        onSidebarToggle: config?.onSidebarToggle,
+        isSidebarOpen: config?.isSidebarOpen
+      }
+    } else if (userPrefixes.some(prefix => path.startsWith(prefix))) {
+      headerConfig = {
+        theme: 'user',
+        logo: {
+          src: userHeader.logo,
+          alt: 'TrackPulse Logo',
+          text: 'TrackPulse'
+        },
+        user: {
+          name: userHeader.profile?.name ?? 'User',
+          avatar: userHeader.profile?.avatar ?? 'U',
+          role: 'USER',
+          dropdown: userHeader.profile?.dropdown ?? []
+        },
+        showAuthButtons: false,
+        onSidebarToggle: config?.onSidebarToggle,
+        isSidebarOpen: config?.isSidebarOpen
+      }
+    } else {
+      headerConfig = {
+        theme: 'guest',
+        logo: {
+          src: guestHeader.logo,
+          alt: 'TrackPulse Logo',
+          text: 'TrackPulse'
+        },
+        showAuthButtons: true,
+        authLinks: guestHeader.links.map(link => ({
+          text: link.text,
+          href: link.href,
+          variant: link.text === 'Sign In' ? 'secondary' : 'primary'
+        })),
+        onSidebarToggle: config?.onSidebarToggle,
+        isSidebarOpen: config?.isSidebarOpen
+      }
+    }
+  }
 
   // Helper to render auth links
   const renderAuthLink = (link: { text: string; href: string; variant?: 'primary' | 'secondary' }, index: number) => (
@@ -63,44 +128,100 @@ const Header = ({ config }: HeaderProps) => {
     </button>
   )
 
+  // Get appropriate icon for dropdown menu item
+  const getIconForMenuItem = (text: string) => {
+    switch (text.toLowerCase()) {
+      case 'settings':
+      case 'profile':
+        return <Settings className="mr-2 h-4 w-4" />;
+      case 'logout':
+        return <LogOut className="mr-2 h-4 w-4" />;
+      default:
+        return <User className="mr-2 h-4 w-4" />;
+    }
+  };
+
   const getThemeClasses = () => {
+    // Use guest header colors for all types for uniformity
+    // Only keep different badge colors to distinguish user types
+    const baseClasses = {
+      header: 'header-guest bg-white dark:bg-slate-900 shadow-themed-md border-b border-gray-200 dark:border-gray-700/50',
+      logo: 'text-primary font-bold',
+      nav: 'text-muted hover:text-primary',
+      userMenu: 'surface hover:bg-themed/5 border border-themed/20 shadow-themed-sm',
+      dropdown: 'bg-white dark:bg-slate-800 border border-gray-100 dark:border-gray-700/80 shadow-lg dark:shadow-gray-900/40'
+    };
+
+    // Only modify badge appearance based on user type
     switch (headerConfig.theme) {
       case 'admin':
         return {
-          header: 'header-admin border-b border-red-800',
-          logo: 'text-white',
-          nav: 'text-red-100 hover:text-white',
-          userMenu: 'bg-red-700 hover:bg-red-800',
-          badge: 'bg-red-800 text-white'
+          ...baseClasses,
+          badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800/50'
         }
       case 'user':
         return {
-          header: 'header-user border-b border-blue-800',
-          logo: 'text-white',
-          nav: 'text-blue-100 hover:text-white',
-          userMenu: 'bg-blue-700 hover:bg-blue-800',
-          badge: 'bg-blue-800 text-white'
+          ...baseClasses,
+          badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50'
         }
       case 'auth':
         return {
-          header: 'header-auth shadow-themed-sm',
-          logo: 'text-primary font-bold',
-          nav: 'text-muted hover:text-primary',
-          userMenu: 'surface hover:bg-themed/5 border border-themed/20',
+          ...baseClasses,
           badge: 'bg-primary/10 text-primary border border-primary/20'
         }
       default:
         return {
-          header: 'header-guest shadow-themed-md',
-          logo: 'text-primary font-bold',
-          nav: 'text-muted hover:text-primary',
-          userMenu: 'surface hover:bg-themed/5 border border-themed/20',
-          badge: 'surface text-primary border border-themed/20'
+          ...baseClasses,
+          badge: 'bg-primary/10 text-primary border border-primary/20'
         }
     }
   }
 
-  const themeClasses = getThemeClasses()
+  // Check if dark mode is active
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  useEffect(() => {
+    // Check if dark mode is active on mount and when theme changes
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    // Initial check
+    checkDarkMode();
+    
+    // Create an observer to detect theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          checkDarkMode();
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+    
+    // Cleanup
+    return () => observer.disconnect();
+  }, []);
+
+  console.log("Dark mode is active:", isDarkMode);
+  console.log("Profile dropdown state:", isProfileDropdownOpen);
+  console.log("User dropdown items:", headerConfig.user?.dropdown);
+
+  const themeClasses = getThemeClasses();
+  
+  // Generate dropdown classes with proper dark mode enforcement when needed
+  const dropdownClasses = isDarkMode 
+    ? `absolute right-0 mt-2 w-56 rounded-lg py-1 bg-slate-800 border border-gray-700 shadow-lg shadow-gray-900/40 z-50` 
+    : `absolute right-0 mt-2 w-56 rounded-lg py-1 bg-white border border-gray-100 shadow-lg z-50`;
+    
+  const dropdownHeaderClasses = isDarkMode 
+    ? `px-4 py-3 border-b border-gray-700` 
+    : `px-4 py-3 border-b border-gray-100`;
+    
+  const dropdownItemClasses = isDarkMode 
+    ? `flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors` 
+    : `flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors`;
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 w-full ${themeClasses.header}`}>
@@ -142,7 +263,9 @@ const Header = ({ config }: HeaderProps) => {
           {/* Right side actions */}
           <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
             {/* Theme Toggle - Always visible */}
-            <ThemeToggle />
+            <div className="p-0.5 sm:p-1">
+              <ThemeToggle />
+            </div>
 
             {/* User Menu for authenticated users */}
             {headerConfig.user && (
@@ -152,24 +275,70 @@ const Header = ({ config }: HeaderProps) => {
                   title="Notifications"
                   className={themeClasses.userMenu}
                 />
-                <IconButton
-                  icon={Settings}
-                  title="Settings"
-                  className={themeClasses.userMenu}
-                />
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${themeClasses.badge}`}>
-                    {headerConfig.user.avatar}
-                  </div>
-                  <span className={`text-sm font-medium hidden sm:block transition-colors duration-200 ${themeClasses.logo}`}>
-                    {headerConfig.user.name}
-                  </span>
+                
+                {/* Profile Dropdown Menu */}
+                <div className="relative z-50" ref={dropdownRef}>
+                  <button 
+                    className="flex items-center space-x-2 cursor-pointer p-1 rounded-lg hover:bg-themed/5 transition-colors"
+                    onClick={() => {
+                      console.log("Toggle dropdown");
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen);
+                    }}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${themeClasses.badge}`}>
+                      {headerConfig.user.avatar}
+                    </div>
+                    <span className={`text-sm font-medium hidden sm:block transition-colors duration-200 ${themeClasses.logo}`}>
+                      {headerConfig.user.name}
+                    </span>
+                    <ChevronDown 
+                      className="h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200" 
+                      style={{ transform: isProfileDropdownOpen ? 'rotate(180deg)' : 'none' }}
+                    />
+                  </button>
+                  
+                  {/* Dropdown Menu with fixed positioning to ensure visibility */}
+                  {isProfileDropdownOpen && (
+                    <div className={dropdownClasses}>
+                      <div className={dropdownHeaderClasses}>
+                        <p className={isDarkMode ? "text-sm font-medium text-gray-200" : "text-sm font-medium text-gray-800"}>
+                          {headerConfig.user.name}
+                        </p>
+                      </div>
+                      <div className="py-1">
+                        {headerConfig.user.dropdown && headerConfig.user.dropdown.length > 0 ? (
+                          headerConfig.user.dropdown.map((item: any, index: number) => (
+                            <a
+                              key={index}
+                              href={item.href}
+                              className={dropdownItemClasses}
+                            >
+                              {getIconForMenuItem(item.text)}
+                              {item.text}
+                            </a>
+                          ))
+                        ) : (
+                          <>
+                            <a
+                              href="/settings"
+                              className={dropdownItemClasses}
+                            >
+                              <Settings className="mr-2 h-4 w-4" />
+                              Settings
+                            </a>
+                            <a
+                              href="/logout"
+                              className={dropdownItemClasses}
+                            >
+                              <LogOut className="mr-2 h-4 w-4" />
+                              Logout
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <IconButton
-                  icon={LogOut}
-                  title="Logout"
-                  className={themeClasses.userMenu}
-                />
               </>
             )}
 
