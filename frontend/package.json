@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "NODE_ENV=production tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "npm run rollup-patch || true"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
@@ -37,5 +38,8 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.4"
+  },
+  "overrides": {
+    "rollup": "^3.29.4"
   }
 }

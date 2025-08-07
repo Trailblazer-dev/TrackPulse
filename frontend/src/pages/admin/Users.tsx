@@ -12,6 +12,18 @@ import {
   ChevronRight
 } from 'lucide-react'
 
+// Define proper types for users with string indexing support
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  dateJoined: string;
+  lastLogin: string;
+  [key: string]: string; // Add index signature for dynamic property access
+}
+
 const Users = () => {
   const [filters, setFilters] = useState(adminUsersManagement.filters)
   const [pagination, setPagination] = useState(adminUsersManagement.table.pagination)
@@ -19,16 +31,6 @@ const Users = () => {
   const [isMobile, setIsMobile] = useState(false)
   // Removed unused currentPage state
   
-  type User = {
-    id: string
-    name: string
-    email: string
-    role: string
-    status: string
-    dateJoined: string
-    lastLogin: string
-  }
-
   const mockUserData: User[] = [
     { id: '001', name: 'John Doe', email: 'john@example.com', role: 'User', status: 'Active', dateJoined: '2023-05-10', lastLogin: '2023-10-15' },
     { id: '002', name: 'Jane Smith', email: 'jane@example.com', role: 'Admin', status: 'Active', dateJoined: '2023-04-22', lastLogin: '2023-10-18' },
@@ -201,14 +203,14 @@ const Users = () => {
 
       return true
     })
-    .sort((a, b) => {
+    .sort((a: User, b: User) => {
       const [column, direction] = filters.sortBy.split('_')
       // Only allow sorting by known keys
       const validColumns: (keyof User)[] = ['id', 'name', 'email', 'role', 'status', 'dateJoined', 'lastLogin']
       if (!validColumns.includes(column as keyof User)) return 0
 
-      const aValue = a[column as keyof User] ?? ''
-      const bValue = b[column as keyof User] ?? ''
+      const aValue = a[column] || ''
+      const bValue = b[column] || ''
       const comparison = aValue.localeCompare(bValue)
       return direction === 'asc' ? comparison : -comparison
     })
