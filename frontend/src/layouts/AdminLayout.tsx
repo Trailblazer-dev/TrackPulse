@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Header from '../components/reuse/Header'
 import Sidebar from '../components/reuse/Sidebar'
 import Footer from '../components/reuse/Footer'
-import { Users, BarChart3, FileText, Database, Settings } from 'lucide-react'
+import { Users, BarChart3, FileText, Database, Settings, ClipboardList } from 'lucide-react'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -49,6 +49,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       { name: 'System Metrics', href: '/admin/metrics', icon: BarChart3, current: false },
       { name: 'Audit Logs', href: '/admin/audit-logs', icon: FileText, current: false, badge: 'New' },
       { name: 'Data Management', href: '/admin/data-management', icon: Database, current: false },
+      { name: 'Report Builder', href: '/admin/report-builder', icon: ClipboardList, current: false },
       { name: 'System Settings', href: '/admin/settings', icon: Settings, current: false }
     ],
     stats: [
@@ -65,7 +66,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Header - Fixed at top */}
       <Header config={adminHeaderConfig} />
       
@@ -77,9 +78,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       />
       
       {/* Main Content Area - With left margin for fixed sidebar */}
-      <div className="md:ml-64 flex flex-col min-h-screen transition-all duration-300">
-        <main className="flex-1 pt-16">
-          <div className="p-8">
+      <div className="md:ml-64 flex flex-col min-h-screen transition-all duration-300 overflow-x-hidden">
+        <main className="flex-1 pt-16 overflow-x-hidden">
+          <div className="p-4 sm:p-8 max-w-full overflow-hidden">
             {children}
           </div>
           
