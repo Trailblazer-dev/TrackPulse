@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { adminReportBuilder } from '../../utils/admin/admin'
 import { 
   FileText, 
@@ -7,7 +7,6 @@ import {
   Download, 
   Save, 
   Clock, 
-  Mail, 
   ChevronDown,
   Plus,
   Trash2,
@@ -28,8 +27,6 @@ const ReportBuilder = () => {
   const [includeCharts, setIncludeCharts] = useState(adminReportBuilder.settings.visualization.includeCharts)
   const [scheduleReport, setScheduleReport] = useState(adminReportBuilder.settings.scheduling.enabled)
   const [frequency, setFrequency] = useState(adminReportBuilder.settings.scheduling.frequency)
-  const [isMobile, setIsMobile] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [activeTab, setActiveTab] = useState('builder')
   const [reportName, setReportName] = useState('')
   const [showPreview, setShowPreview] = useState(false)
@@ -39,12 +36,12 @@ const ReportBuilder = () => {
   useEffect(() => {
     // Check if device is mobile
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      // setIsMobile(window.innerWidth < 768)
     }
     
     // Check if dark mode is enabled
     const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'))
+      // setIsDarkMode(document.documentElement.classList.contains('dark'))
     }
     
     // Initial checks

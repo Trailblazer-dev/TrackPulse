@@ -6,6 +6,7 @@ import { header as guestHeader } from '../../utils/guest/guest'
 import { header as userHeader } from '../../utils/user/user'
 import { header as adminHeader } from '../../utils/admin/admin'
 import type { HeaderConfig } from './headerConfigs'
+import { roleService } from '../../utils/roleService'
 
 interface HeaderProps {
   config?: HeaderConfig
@@ -29,12 +30,25 @@ const Header = ({ config }: HeaderProps) => {
     };
   }, []);
   
+  // Handle logout action
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    roleService.clearRole();
+    setIsProfileDropdownOpen(false);
+    
+    // Use window.location instead of navigate hook
+    window.location.href = '/';
+  };
+  
   // Determine which header config to use based on route if not explicitly provided
   let headerConfig: any = config
   if (!headerConfig) {
     const path = window.location.pathname
     const userPrefixes = ['/dashboard', '/analytics', '/reports', '/bookmarks', '/settings']
     const adminPrefixes = ['/admin', '/admin/users', '/admin/metrics', '/admin/data-management', '/admin/report-builder', '/admin/audit-logs']
+    
+    const currentRole = roleService.getCurrentRole();
+    
     if (adminPrefixes.some(prefix => path.startsWith(prefix))) {
       headerConfig = {
         theme: 'admin',
@@ -47,7 +61,10 @@ const Header = ({ config }: HeaderProps) => {
           name: adminHeader.profile?.name ?? 'Admin',
           avatar: adminHeader.profile?.avatar ?? 'A',
           role: adminHeader.profile?.showAdminBadge ? 'ADMIN' : undefined,
-          dropdown: adminHeader.profile?.dropdown ?? []
+          dropdown: [
+            { text: "Profile", href: "/settings" },
+            { text: "Logout", href: "#", action: handleLogout },
+          ]
         },
         showAuthButtons: false,
         onSidebarToggle: config?.onSidebarToggle,
@@ -64,8 +81,11 @@ const Header = ({ config }: HeaderProps) => {
         user: {
           name: userHeader.profile?.name ?? 'User',
           avatar: userHeader.profile?.avatar ?? 'U',
-          role: 'USER',
-          dropdown: userHeader.profile?.dropdown ?? []
+          role: currentRole === 'admin' ? 'ADMIN' : 'USER',
+          dropdown: [
+            { text: "Profile", href: "/settings" },
+            { text: "Logout", href: "#", action: handleLogout },
+          ]
         },
         showAuthButtons: false,
         onSidebarToggle: config?.onSidebarToggle,
@@ -128,7 +148,7 @@ const Header = ({ config }: HeaderProps) => {
     </button>
   )
 
-  // Get appropriate icon for dropdown menu item
+  // Get icon for dropdown menu item
   const getIconForMenuItem = (text: string) => {
     switch (text.toLowerCase()) {
       case 'settings':
@@ -204,10 +224,6 @@ const Header = ({ config }: HeaderProps) => {
     return () => observer.disconnect();
   }, []);
 
-  console.log("Dark mode is active:", isDarkMode);
-  console.log("Profile dropdown state:", isProfileDropdownOpen);
-  console.log("User dropdown items:", headerConfig.user?.dropdown);
-
   const themeClasses = getThemeClasses();
   
   // Generate dropdown classes with proper dark mode enforcement when needed
@@ -220,8 +236,8 @@ const Header = ({ config }: HeaderProps) => {
     : `px-4 py-3 border-b border-gray-100`;
     
   const dropdownItemClasses = isDarkMode 
-    ? `flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors` 
-    : `flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors`;
+    ? `flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors cursor-pointer` 
+    : `flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer`;
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 w-full ${themeClasses.header}`}>
@@ -308,14 +324,25 @@ const Header = ({ config }: HeaderProps) => {
                       <div className="py-1">
                         {headerConfig.user.dropdown && headerConfig.user.dropdown.length > 0 ? (
                           headerConfig.user.dropdown.map((item: any, index: number) => (
-                            <a
-                              key={index}
-                              href={item.href}
-                              className={dropdownItemClasses}
-                            >
-                              {getIconForMenuItem(item.text)}
-                              {item.text}
-                            </a>
+                            item.action ? (
+                              <button
+                                key={index}
+                                onClick={item.action}
+                                className={dropdownItemClasses}
+                              >
+                                {getIconForMenuItem(item.text)}
+                                {item.text}
+                              </button>
+                            ) : (
+                              <a
+                                key={index}
+                                href={item.href}
+                                className={dropdownItemClasses}
+                              >
+                                {getIconForMenuItem(item.text)}
+                                {item.text}
+                              </a>
+                            )
                           ))
                         ) : (
                           <>
@@ -326,13 +353,13 @@ const Header = ({ config }: HeaderProps) => {
                               <Settings className="mr-2 h-4 w-4" />
                               Settings
                             </a>
-                            <a
-                              href="/logout"
+                            <button
+                              onClick={handleLogout}
                               className={dropdownItemClasses}
                             >
                               <LogOut className="mr-2 h-4 w-4" />
                               Logout
-                            </a>
+                            </button>
                           </>
                         )}
                       </div>

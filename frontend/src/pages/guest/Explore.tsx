@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title);
 
 // Simple GenrePieChart component
-const GenrePieChart = ({ data }) => {
+const GenrePieChart = ({ data }: { data: any }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
 
   const options = {
@@ -76,7 +76,7 @@ const Explore = () => {
         },
         ticks: {
           color: isDarkMode ? '#94A3B8' : '#64748B',
-          callback: (value) => `${value}%`
+          callback: (value: number | string) => `${value}%`
         }
       },
       x: {
@@ -99,7 +99,7 @@ const Explore = () => {
         beginAtZero: false,
         ticks: {
           color: isDarkMode ? '#94A3B8' : '#64748B',
-          callback: (value) => `$${(Number(value) / 1000000).toFixed(1)}M`
+          callback: (value: number | string) => `$${(Number(value) / 1000000).toFixed(1)}M`
         }
       }
     }

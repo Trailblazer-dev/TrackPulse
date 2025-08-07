@@ -1,13 +1,35 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { adminUsersManagement } from '../../utils/admin/admin'
-import { Search, Filter, Download, Plus, Edit, Trash2, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react'
+import { 
+  Search, 
+  Filter, 
+  MoreVertical, 
+  Download, 
+  Trash2, 
+  UserPlus, 
+  Edit,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react'
 
 const Users = () => {
   const [filters, setFilters] = useState(adminUsersManagement.filters)
   const [pagination, setPagination] = useState(adminUsersManagement.table.pagination)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [isMobile, setIsMobile] = useState(false)
-  const [mockUserData, setMockUserData] = useState<any[]>([
+  // Removed unused currentPage state
+  
+  type User = {
+    id: string
+    name: string
+    email: string
+    role: string
+    status: string
+    dateJoined: string
+    lastLogin: string
+  }
+
+  const mockUserData: User[] = [
     { id: '001', name: 'John Doe', email: 'john@example.com', role: 'User', status: 'Active', dateJoined: '2023-05-10', lastLogin: '2023-10-15' },
     { id: '002', name: 'Jane Smith', email: 'jane@example.com', role: 'Admin', status: 'Active', dateJoined: '2023-04-22', lastLogin: '2023-10-18' },
     { id: '003', name: 'Bob Johnson', email: 'bob@example.com', role: 'User', status: 'Inactive', dateJoined: '2023-06-15', lastLogin: '2023-09-30' },
@@ -18,7 +40,7 @@ const Users = () => {
     { id: '008', name: 'Fiona Clark', email: 'fiona@example.com', role: 'User', status: 'Inactive', dateJoined: '2023-03-18', lastLogin: '2023-08-05' },
     { id: '009', name: 'George White', email: 'george@example.com', role: 'User', status: 'Active', dateJoined: '2023-09-05', lastLogin: '2023-10-14' },
     { id: '010', name: 'Hannah Lee', email: 'hannah@example.com', role: 'Admin', status: 'Active', dateJoined: '2023-02-28', lastLogin: '2023-10-18' }
-  ])
+  ]
 
   useEffect(() => {
     // Check if device is mobile
@@ -128,11 +150,13 @@ const Users = () => {
   const getRoleBadgeColor = (role: string) => {
     switch (role.toLowerCase()) {
       case 'admin':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
       case 'manager':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+      case 'user':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700/50 dark:text-gray-300'
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
     }
   }
 
@@ -150,19 +174,42 @@ const Users = () => {
       if (filters.role !== 'all' && user.role.toLowerCase() !== filters.role.toLowerCase()) {
         return false
       }
-      
+
       // Status filter
       if (filters.status !== 'all' && user.status.toLowerCase() !== filters.status.toLowerCase()) {
         return false
       }
-      
+
+      // Date joined filter (example logic, adjust as needed)
+      if (filters.dateJoined !== 'all') {
+        const joinedDate = new Date(user.dateJoined)
+        const now = new Date()
+        if (filters.dateJoined === 'last7days') {
+          const sevenDaysAgo = new Date(now)
+          sevenDaysAgo.setDate(now.getDate() - 7)
+          if (joinedDate < sevenDaysAgo) return false
+        } else if (filters.dateJoined === 'last30days') {
+          const thirtyDaysAgo = new Date(now)
+          thirtyDaysAgo.setDate(now.getDate() - 30)
+          if (joinedDate < thirtyDaysAgo) return false
+        } else if (filters.dateJoined === 'last90days') {
+          const ninetyDaysAgo = new Date(now)
+          ninetyDaysAgo.setDate(now.getDate() - 90)
+          if (joinedDate < ninetyDaysAgo) return false
+        }
+      }
+
       return true
     })
     .sort((a, b) => {
       const [column, direction] = filters.sortBy.split('_')
-      if (!a[column] || !b[column]) return 0
-      
-      const comparison = a[column].localeCompare(b[column])
+      // Only allow sorting by known keys
+      const validColumns: (keyof User)[] = ['id', 'name', 'email', 'role', 'status', 'dateJoined', 'lastLogin']
+      if (!validColumns.includes(column as keyof User)) return 0
+
+      const aValue = a[column as keyof User] ?? ''
+      const bValue = b[column as keyof User] ?? ''
+      const comparison = aValue.localeCompare(bValue)
       return direction === 'asc' ? comparison : -comparison
     })
     
@@ -183,7 +230,7 @@ const Users = () => {
             className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-primary text-white flex items-center gap-1"
             aria-label={adminUsersManagement.actions.create.label}
           >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">{adminUsersManagement.actions.create.label}</span>
           </button>
           
@@ -201,7 +248,7 @@ const Users = () => {
             disabled={selectedUsers.length === 0}
             aria-label={adminUsersManagement.actions.bulkActions.label}
           >
-            <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">{adminUsersManagement.actions.bulkActions.label}</span>
           </button>
         </div>
@@ -410,7 +457,7 @@ const Users = () => {
                           className="p-1 text-muted hover:text-primary transition-colors"
                           aria-label="More options"
                         >
-                          <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </td>
@@ -453,7 +500,7 @@ const Users = () => {
                            Math.abs(page - pagination.currentPage) <= 1;
                   })
                   .map((page, idx, arr) => (
-                    <React.Fragment key={page}>
+                    <Fragment key={page}>
                       {idx > 0 && arr[idx - 1] !== page - 1 && (
                         <span className="relative inline-flex items-center px-3 py-2 border border-themed/20 bg-surface text-sm font-medium text-muted">
                           ...
@@ -469,7 +516,7 @@ const Users = () => {
                       >
                         {page}
                       </button>
-                    </React.Fragment>
+                    </Fragment>
                   ))}
                 
                 <button
@@ -487,36 +534,35 @@ const Users = () => {
               </nav>
             </div>
           </div>
-          
-          {/* Simplified mobile pagination */}
-          <div className="flex justify-between w-full sm:hidden">
-            <button
-              onClick={() => handlePageChange(pagination.currentPage - 1)}
-              disabled={pagination.currentPage === 1}
-              className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
-                pagination.currentPage === 1
-                  ? 'text-muted/50 bg-themed/5 cursor-not-allowed'
-                  : 'text-themed border border-themed/20 bg-surface hover:bg-themed/5'
-              }`}
-            >
-              Previous
-            </button>
-            
+          {/* Mobile pagination */}
+          <div className="flex sm:hidden flex-col gap-2 w-full items-center justify-between">
             <div className="text-xs text-muted self-center">
               Page {pagination.currentPage} of {Math.ceil(filteredUsers.length / pagination.itemsPerPage)}
             </div>
-            
-            <button
-              onClick={() => handlePageChange(pagination.currentPage + 1)}
-              disabled={pagination.currentPage >= Math.ceil(filteredUsers.length / pagination.itemsPerPage)}
-              className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
-                pagination.currentPage >= Math.ceil(filteredUsers.length / pagination.itemsPerPage)
-                  ? 'text-muted/50 bg-themed/5 cursor-not-allowed'
-                  : 'text-themed border border-themed/20 bg-surface hover:bg-themed/5'
-              }`}
-            >
-              Next
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1}
+                className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
+                  pagination.currentPage === 1
+                    ? 'text-muted/50 bg-themed/5 cursor-not-allowed'
+                    : 'text-themed border border-themed/20 bg-surface hover:bg-themed/5'
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage >= Math.ceil(filteredUsers.length / pagination.itemsPerPage)}
+                className={`relative inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md ${
+                  pagination.currentPage >= Math.ceil(filteredUsers.length / pagination.itemsPerPage)
+                    ? 'text-muted/50 bg-themed/5 cursor-not-allowed'
+                    : 'text-themed border border-themed/20 bg-surface hover:bg-themed/5'
+                }`}
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>

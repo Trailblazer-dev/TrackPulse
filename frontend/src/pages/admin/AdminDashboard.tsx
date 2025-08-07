@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { adminDashboard } from '../../utils/admin/admin'
-import { Line, Pie, Bar } from 'react-chartjs-2'
+import { Line, Pie } from 'react-chartjs-2'
 import { 
   Chart as ChartJS, 
   ArcElement, 
@@ -93,7 +93,7 @@ const AdminDashboard = () => {
         }
       },
       tooltip: {
-        mode: 'index',
+        mode: 'index' as const, // Fixed tooltip mode type
         intersect: false,
         bodyFont: {
           size: isMobile ? 10 : 12

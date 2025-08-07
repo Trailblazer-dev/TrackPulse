@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import  { useState, useEffect } from 'react'
 import { analytics } from '../../utils/user/user'
 import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2'
 import { 
@@ -30,6 +30,23 @@ ChartJS.register(
   Title,
   Filler // Register the Filler plugin
 );
+
+// Define a more comprehensive interface for analytics sections
+interface AnalyticsSection {
+  title: string;
+  chartType?: string;
+  period?: string;
+  insight?: string;
+  chartData: {
+    labels: string[];
+    datasets: {
+      label: string;
+      data: number[];
+      borderColor: string;
+      backgroundColor: string;
+    }[];
+  };
+}
 
 const Analytics = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -128,15 +145,16 @@ const Analytics = () => {
         },
         ticks: {
           color: isDarkMode ? '#94A3B8' : '#64748B',
-          // Format Y axis ticks for mobile
-          callback: function(value: any) {
+          // Fixed callback function with proper typing
+          callback: function(value: number | string): string {
             if (isMobile) {
               // Abbreviate numbers on mobile
-              if (value >= 1000000) return (value / 1000000) + 'M';
-              if (value >= 1000) return (value / 1000) + 'K';
-              return value;
+              const numValue = Number(value);
+              if (numValue >= 1000000) return (numValue / 1000000) + 'M';
+              if (numValue >= 1000) return (numValue / 1000) + 'K';
+              return String(value);
             }
-            return value;
+            return String(value);
           },
           font: {
             size: isMobile ? 9 : 11
@@ -159,16 +177,19 @@ const Analytics = () => {
           minRotation: isMobile ? 45 : 0,
           maxTicksLimit: isMobile ? 6 : 10, // Fewer ticks on mobile
           padding: isMobile ? 2 : 5,
-          callback: function(value: any, index: number, values: any[]) {
-            // Abbreviate labels on mobile
-            const label = this.getLabelForValue(value);
+          callback: function(value: any, index: number, values: any[]): string {
+            // Fix: Handle label manually without using getLabelForValue
+            let label = String(value);
             if (isMobile) {
               // If we have too many labels, show fewer
               if (values.length > 6) {
+                // Only show every Nth label on mobile
                 if (index % 2 !== 0) return '';
               }
               // Truncate long strings
-              return label.length > 5 ? label.substring(0, 3) + '...' : label;
+              if (label.length > 8) {
+                return label.substring(0, 6) + '...';
+              }
             }
             return label;
           }
@@ -199,40 +220,6 @@ const Analytics = () => {
     layout: {
       padding: isMobile ? 10 : 20
     }
-  };
-
-  // Dynamic chart data based on selected filters
-  const getDynamicChartData = () => {
-    // Sample data structure - in a real app this would be filtered based on selections
-    return {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [
-        selectedMetrics.includes('streams') ? {
-          label: 'Streams',
-          data: [15000, 21000, 18000, 24000, 27000, 25000],
-          borderColor: '#36A2EB',
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          fill: dynamicChartType !== 'line',
-          tension: 0.4
-        } : null,
-        selectedMetrics.includes('downloads') ? {
-          label: 'Downloads',
-          data: [12000, 19000, 14000, 22000, 24000, 23000],
-          borderColor: '#FF6384',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          fill: dynamicChartType !== 'line',
-          tension: 0.4
-        } : null,
-        selectedMetrics.includes('revenue') ? {
-          label: 'Revenue ($)',
-          data: [45000, 52000, 49000, 58000, 62000, 67000],
-          borderColor: '#4BC0C0',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          fill: dynamicChartType !== 'line',
-          tension: 0.4
-        } : null
-      ].filter(Boolean)
-    };
   };
 
   // Filter options
@@ -278,20 +265,37 @@ const Analytics = () => {
   };
 
   // Filtered sections based on active filter
-  const filteredSections = Object.entries(analytics).filter(([key, section]) => {
-    if (activeFilter === 'all') return true;
-    
-    const sectionKeywords: Record<string, string[]> = {
-      performance: ['performance', 'growth', 'trend'],
-      audience: ['audience', 'geographic', 'demographic'],
-      revenue: ['revenue', 'sales', 'income'],
-      platforms: ['platform', 'source', 'channel']
-    };
-    
-    const keywords = sectionKeywords[activeFilter] || [];
-    const sectionTitle = section.title.toLowerCase();
-    return keywords.some(keyword => sectionTitle.includes(keyword));
+  const filteredSections = Object.entries(analytics).filter(([_, section]) => {
+    // Cast section to the proper type
+    const typedSection = section as unknown as AnalyticsSection;
+    return activeFilter === 'all' || typedSection.chartType === activeFilter;
   });
+
+  // Dynamic chart data based on selected filters
+  const getDynamicChartData = () => {
+    // Return data without any null values
+    return {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      datasets: [
+        {
+          label: 'Streams',
+          data: [1200, 1900, 3000, 5000, 4000, 3000],
+          borderColor: '#4f46e5',
+          backgroundColor: 'rgba(79, 70, 229, 0.1)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Downloads',
+          data: [800, 1200, 900, 1800, 1500, 2000],
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          fill: true,
+          tension: 0.4
+        }
+      ] // No .filter(Boolean) needed as we're not including null values
+    };
+  };
 
   // Chart type mapping function
   const renderChart = (section: any) => {
@@ -596,9 +600,10 @@ const Analytics = () => {
             <Line 
               data={{
                 ...getDynamicChartData(),
-                datasets: getDynamicChartData().datasets.map(dataset => 
-                  dataset ? { ...dataset, fill: true } : null
-                ).filter(Boolean)
+                datasets: getDynamicChartData().datasets.map(dataset => ({
+                  ...dataset,
+                  fill: true
+                }))
               }}
               options={{
                 ...baseOptions, 
@@ -611,19 +616,19 @@ const Analytics = () => {
       
       {/* Main charts grid - Mobile optimized with single column layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
-        {filteredSections.map(([key, section], idx) => {
-          if (!section) return null;
+        {filteredSections.map(([sectionKey, section], _) => {
+          const typedSection = section as unknown as AnalyticsSection;
           
           return (
             <div
-              key={`section-${idx}`}
+              key={sectionKey}
               className="surface rounded-xl shadow-themed-md p-4 sm:p-6 border border-themed/10 hover:shadow-themed-lg transition-all duration-300"
             >
               <div className="flex items-center justify-between mb-3 sm:mb-6">
-                <h3 className="text-base sm:text-xl font-semibold text-themed">{section.title || key}</h3>
-                {section.period && (
+                <h3 className="text-base sm:text-xl font-semibold text-themed">{typedSection.title || sectionKey}</h3>
+                {typedSection.period && (
                   <span className="text-[10px] sm:text-xs text-muted bg-gray-100 dark:bg-gray-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                    {section.period}
+                    {typedSection.period}
                   </span>
                 )}
               </div>
@@ -636,14 +641,11 @@ const Analytics = () => {
                 }
               </div>
               
-              {section.insight && (
-                <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 text-xs sm:text-sm rounded-lg border border-blue-100 dark:border-blue-800/50">
-                  <div className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-4 4a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <p>{section.insight}</p>
-                  </div>
+              {/* Optional insight section */}
+              {typedSection.insight && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-lg p-3 sm:p-4 mt-3 sm:mt-4">
+                  <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Insight</h4>
+                  <p>{typedSection.insight}</p>
                 </div>
               )}
             </div>

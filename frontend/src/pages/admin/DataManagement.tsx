@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { adminDataManagement } from '../../utils/admin/admin'
 import { 
   Database, 
@@ -9,8 +9,6 @@ import {
   ChevronDown,
   Calendar,
   AlertCircle,
-  CheckCircle,
-  XCircle,
   FileText,
   Server
 } from 'lucide-react'
@@ -18,6 +16,7 @@ import {
 const DataManagement = () => {
   const [activeTab, setActiveTab] = useState('backups')
   const [selectedBackups, setSelectedBackups] = useState<string[]>([])
+
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ 
     key: 'date', 
     direction: 'desc' 
@@ -110,7 +109,7 @@ const DataManagement = () => {
     
     // In a real app, we would make API calls here
     console.log(`Performing ${action} ${backup ? `on backup from ${backup.date}` : 'operation'}`)
-    
+
     // Close modal after simulated operation
     if (action === 'download') {
       setTimeout(() => {
@@ -476,6 +475,7 @@ const DataManagement = () => {
             <div className="surface rounded-lg shadow-themed-md p-5 border border-themed/10">
               <h3 className="text-lg font-semibold text-themed mb-4">Export Data</h3>
               
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-muted mb-1">Select Data Type</label>
@@ -535,6 +535,7 @@ const DataManagement = () => {
             <div className="surface rounded-lg shadow-themed-md p-5 border border-themed/10">
               <h3 className="text-lg font-semibold text-themed mb-4">Import Data</h3>
               
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-muted mb-1">Data Source</label>

@@ -3,6 +3,7 @@ import { Eye, EyeOff, Github, Chrome, Apple, Mail, Lock } from "lucide-react";
 import { login } from "../utils/auth";
 import InlineSpinner from "../components/common/InlineSpinner";
 import AuthLayout from "../layouts/AuthLayout";
+import { roleService } from '../utils/roleService';
 
 const SignIn: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -13,7 +14,6 @@ const SignIn: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -73,16 +73,21 @@ const SignIn: React.FC = () => {
     setErrors({});
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // For demo purposes, assume login is successful
-      setShowSuccess(true);
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 2000);
-    } catch {
-      setErrors({ submit: "Something went wrong. Please try again." });
+      // Demo login logic - set role based on email format
+      // This is just for demonstration purposes
+      if (formData.email.includes('admin')) {
+        roleService.setCurrentRole('admin');
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 1000);
+      } else {
+        roleService.setCurrentRole('user');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+      }
+    } catch (error) {
+      setErrors({ submit: 'Invalid credentials. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -378,12 +383,15 @@ const SignIn: React.FC = () => {
             </form>
 
             {/* Success Message */}
-            {showSuccess && (
-              <div className="bg-green-50 dark:bg-green-900/50 border border-green-300 dark:border-green-700/50 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg text-center animate-fade-in-up shadow-lg dark:shadow-green-500/25 backdrop-blur-sm">
-                <p className="font-medium">Welcome back!</p>
-                <p className="text-sm">You have successfully signed in.</p>
-              </div>
-            )}
+            {/* Demo note */}
+            <div className="border-t border-themed/10 pt-4 mt-4 text-sm text-muted text-center">
+              <p>Demo Login Tips:</p>
+              <ul className="mt-1">
+                <li>Use any email containing "admin" for Admin role</li>
+                <li>Use any other email for User role</li>
+                <li>Password can be anything</li>
+              </ul>
+            </div>
 
             {/* Sign Up Link */}
             <div className={`text-center transition-all duration-500 delay-1500 ${

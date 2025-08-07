@@ -2,6 +2,8 @@ import { hero } from '../../utils/guest/guest'
 import { belt } from "../../utils/guest/guest";
 import { useTheme } from '../../hooks/useTheme';
 import UserIcon from '../../assets/UserIcon';
+// import React from 'react';
+import RoleSwitcher from '../../components/common/RoleSwitcher';
 
 const Landing = () => {
   const { theme } = useTheme();
@@ -10,6 +12,13 @@ const Landing = () => {
     <>
       {/* Main content - margin and padding handled by layout */}
       <main className="min-h-screen bg-surface overflow-x-hidden">
+        {/* Add role switcher at the top of the page for easy access */}
+        <section className="py-8 container mx-auto px-4">
+          <div className="max-w-lg mx-auto">
+            <RoleSwitcher />
+          </div>
+        </section>
+      
       <style>{`
         html, body {
           overflow-x: hidden;

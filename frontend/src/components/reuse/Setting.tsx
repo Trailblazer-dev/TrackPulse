@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { User, Lock, Bell, PaintBucket, Code, Globe, Key } from 'lucide-react'
 import { userSettings } from '../../utils/settings'
 import { adminSettings } from '../../utils/settings'
@@ -15,7 +15,6 @@ const Setting = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
   
   // Form data for various settings

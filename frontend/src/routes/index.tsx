@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import type { RouteObject } from 'react-router-dom';
 import Spinner from '../components/common/Spinner';
 import { guestRoutes } from './guestRoutes';
 import { authRoutes } from './authRoutes';
@@ -10,12 +9,7 @@ import ProtectedRoute from './ProtectedRoute';
 import DemoModeBanner from '../components/common/DemoModeBanner';
 
 // Combine all routes
-const allRoutes: RouteObject[] = [
-  ...guestRoutes,
-  ...authRoutes,
-  ...userRoutes,
-  ...adminRoutes,
-];
+// (Removed unused allRoutes variable)
 
 // NotFound component
 const NotFound = () => (

@@ -1,8 +1,3 @@
-
-
-
-
-
 // settings for the user 
 /**
  * User settings configuration
@@ -79,7 +74,9 @@ export const adminSettings: AdminSettings = {
         enableSSL: true,
         passwordPolicy: {
             minLength: 8,
-            requireSpecialChars: true
-        }
+            requireSpecialChars: true,
+            passwordChangeInterval: 90 // Added missing property
+        },
+        allowPasswordReset: true
     }
 };

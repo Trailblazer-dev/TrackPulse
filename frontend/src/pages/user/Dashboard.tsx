@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { dashboard } from '../../utils/user/user'
 import { Pie, Line, Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title } from 'chart.js'
@@ -83,6 +83,7 @@ const Dashboard = () => {
     }
   };
 
+  // Fix chart options with proper type annotations
   const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -92,18 +93,18 @@ const Dashboard = () => {
       },
       point: {
         radius: isMobile ? 2 : 3,
-        hoverRadius: isMobile ? 3 : 5
+        hoverRadius: isMobile ? 4 : 6
       }
     },
     plugins: {
       legend: {
         labels: {
           color: isDarkMode ? '#CBD5E1' : '#1F2937',
-          font: { 
+          font: {
             family: 'Inter, sans-serif',
-            size: isMobile ? 10 : 12 
+            size: 12
           },
-          boxWidth: isMobile ? 12 : 20
+          boxWidth: 15
         }
       },
       tooltip: {
@@ -124,23 +125,20 @@ const Dashboard = () => {
         },
         ticks: {
           color: isDarkMode ? '#94A3B8' : '#64748B',
-          callback: (value: number) => {
-            if (isMobile) {
-              // More compact format for mobile
-              return `$${(value / 1000000)}M`;
-            }
-            return `$${(value / 1000000).toFixed(1)}M`;
+          // Fix the callback function signature with correct typing
+          callback: function(this: any, tickValue: number | string): string {
+            return String(tickValue);
           },
           font: {
-            size: isMobile ? 9 : 11
+            size: 11
           },
-          maxTicksLimit: isMobile ? 5 : 8
+          maxTicksLimit: 8
         }
       },
       x: {
         grid: {
           color: isDarkMode ? 'rgba(71, 85, 105, 0.3)' : 'rgba(226, 232, 240, 0.5)',
-          display: !isMobile
+          display: false
         },
         ticks: {
           color: isDarkMode ? '#94A3B8' : '#64748B',

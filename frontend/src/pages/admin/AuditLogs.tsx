@@ -208,10 +208,10 @@ const AuditLogs = () => {
         : severityOrder[b.severity as keyof typeof severityOrder] - severityOrder[a.severity as keyof typeof severityOrder];
     }
     
-    // Default string comparison
+    // Fixed string comparison by checking if the values are strings
     return direction === 'asc'
-      ? a[field as keyof typeof a].localeCompare(b[field as keyof typeof b])
-      : b[field as keyof typeof b].localeCompare(a[field as keyof typeof a]);
+      ? String(a[field as keyof typeof a]).localeCompare(String(b[field as keyof typeof b]))
+      : String(b[field as keyof typeof b]).localeCompare(String(a[field as keyof typeof a]));
   });
 
   // Paginate logs
