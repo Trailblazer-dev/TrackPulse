@@ -1004,6 +1004,53 @@ footer {
     }
 }
 
+/* Input field color fixes for dark mode */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  color: var(--color-text);
+}
+
+/* Ensure consistent placeholder styling across themes */
+::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+/* Enhanced focus styles for all input types */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-hover);
+}
+
+/* Proper dark mode input styling */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="date"],
+.dark input[type="number"],
+.dark input[type="search"],
+.dark textarea,
+.dark select {
+  background-color: var(--bg-accent);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+/* Dark mode input placeholder */
+.dark ::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
 /* Enhanced theme transitions for auth pages */
 .auth-theme-transition {
     transition: 

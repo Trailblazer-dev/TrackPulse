@@ -20,7 +20,7 @@ const UserLayout = ({ children }: UserLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Header - Fixed at top */}
       <Header
         config={{
@@ -47,9 +47,9 @@ const UserLayout = ({ children }: UserLayoutProps) => {
       />
 
       {/* Main Content Area - With left margin for fixed sidebar */}
-      <div className="md:ml-64 flex flex-col min-h-screen transition-all duration-300">
-        <main className="flex-1 pt-16">
-          <div className="p-8">
+      <div className="md:ml-64 flex flex-col min-h-screen transition-all duration-300 overflow-x-hidden">
+        <main className="flex-1 pt-16 overflow-x-hidden">
+          <div className="p-4 sm:p-8 max-w-full">
             {children}
           </div>
           {/* Footer - Part of scrollable content */}
