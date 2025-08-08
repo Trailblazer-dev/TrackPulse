@@ -1,4 +1,3 @@
-
 import { footer } from '../../utils/footer'
 import { ExternalLink, ArrowRight } from 'lucide-react'
 
@@ -60,6 +59,18 @@ const Footer = () => {
                 src="/logo.png" 
                 alt="TrackPulse Logo" 
                 className="h-8 sm:h-10 w-auto mr-3"
+                onError={(e) => {
+                  console.error("Logo failed to load in footer");
+                  e.currentTarget.style.display = 'none';
+                  // Show text instead
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const textNode = document.createElement('span');
+                    textNode.className = "text-xl sm:text-2xl font-bold text-primary";
+                    textNode.textContent = "TP";
+                    parent.prepend(textNode);
+                  }
+                }}
               />
               <span className="text-xl sm:text-2xl font-bold text-primary">TrackPulse</span>
             </div>

@@ -262,16 +262,16 @@ const Header = ({ config }: HeaderProps) => {
                 src={headerConfig.logo.src}
                 alt={headerConfig.logo.alt}
                 className="h-6 sm:h-8 w-auto transition-transform duration-200 group-hover:scale-105"
+                onError={(e) => {
+                  console.error("Logo failed to load", headerConfig.logo.src);
+                  // Fallback to text
+                  e.currentTarget.style.display = 'none';
+                }}
               />
               <div className="flex items-center space-x-2">
                 <span className={`hidden sm:block text-base sm:text-lg lg:text-xl font-bold transition-colors duration-200 ${themeClasses.logo}`}>
                   {headerConfig.customTitle || headerConfig.logo.text}
                 </span>
-                {/* {headerConfig.user?.role && (
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase transition-all duration-200 ${themeClasses.badge}`}>
-                    {headerConfig.user.role}
-                  </span>
-                )} */}
               </div>
             </a>
           </div>

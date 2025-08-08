@@ -38,7 +38,7 @@ const Landing = () => {
         }
         
         .hero-section {
-          --bg-image: url('${hero.bg}');
+          --bg-image: url('/herobg.png');
         }
         .hero-bg {
           background-image: var(--bg-image);
