@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, UserProfile
+
+from .models import UserAccount, UserProfile
+
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -12,17 +14,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     full_name = serializers.ReadOnlyField()
     
     class Meta:
-        model = User
+        model = UserAccount
         fields = [
-            'id', 'username', 'email', 'first_name', 'last_name',
+            'user_id', 'username', 'email', 'first_name', 'last_name',
             'full_name', 'is_active', 'date_joined', 'profile'
         ]
-        read_only_fields = ['id', 'date_joined']
+        read_only_fields = ['user_id', 'date_joined']
+
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -30,7 +34,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True)
     
     class Meta:
-        model = User
+        model = UserAccount
         fields = [
             'username', 'email', 'first_name', 'last_name',
             'password', 'password_confirm'
@@ -44,13 +48,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
-        user = User.objects.create_user(**validated_data)
+        user = UserAccount.objects.create_user(**validated_data)
         user.set_password(password)
         user.save()
-        
         # Create user profile
         UserProfile.objects.create(user=user)
-        
         return user
 
 

@@ -22,7 +22,7 @@ def register(request):
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             'token': token.key,
-            'user_id': user.id,
+            'user_id': user.user_id,
             'username': user.username,
             'email': user.email
         }, status=status.HTTP_201_CREATED)
@@ -56,7 +56,7 @@ def login(request):
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             'token': token.key,
-            'user_id': user.id,
+            'user_id': user.user_id,
             'username': user.username,
             'email': user.email
         }, status=status.HTTP_200_OK)
@@ -116,7 +116,7 @@ def user_info(request):
     profile, created = UserProfile.objects.get_or_create(user=user)
     
     return Response({
-        'id': user.id,
+        'user_id': user.user_id,
         'username': user.username,
         'email': user.email,
         'first_name': user.first_name,
