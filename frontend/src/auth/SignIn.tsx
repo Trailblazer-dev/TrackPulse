@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Eye, EyeOff, Github, Chrome, Apple, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Github, Apple, Mail, Lock } from "lucide-react";
 import { login } from "../utils/auth";
 import InlineSpinner from "../components/common/InlineSpinner";
 import AuthLayout from "../layouts/AuthLayout";
-import { roleService } from '../utils/roleService';
-
+import { authService } from "../services/api/auth";
+// Import logo images
+import FacebookLogo from "../assets/Facebook_logo_(square).png"; 
+import GoogleLogo from "../assets/google_logo.webp"; 
 const SignIn: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -73,28 +75,28 @@ const SignIn: React.FC = () => {
     setErrors({});
 
     try {
-      // Demo login logic - set role based on email format
-      // This is just for demonstration purposes
-      if (formData.email.includes('admin')) {
-        roleService.setCurrentRole('admin');
-        setTimeout(() => {
-          window.location.href = '/admin';
-        }, 1000);
-      } else {
-        roleService.setCurrentRole('user');
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1000);
-      }
-    } catch (error) {
-      setErrors({ submit: 'Invalid credentials. Please try again.' });
+      // Use the authService for login
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.rememberMe
+      });
+      
+      // Redirect based on user role
+      const userData = response.data.user;
+      const redirectPath = userData.role === 'admin' ? '/admin' : '/dashboard';
+      window.location.href = redirectPath;
+      
+    } catch (error: any) {
+      setErrors({ submit: error.message || 'Invalid credentials. Please try again.' });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSocialSignIn = (provider: string) => {
-    console.log(`Signing in with ${provider}`);
+    // This will be implemented when social auth is ready
+    window.location.href = `/api/auth/${provider}`;
   };
 
   return (
@@ -210,45 +212,45 @@ const SignIn: React.FC = () => {
               </div>
             )}
 
-            {/* Social Sign In */}
+            {/* Social Sign In - Updated with actual logo images */}
             <div className={`space-y-3 transition-all duration-500 delay-900 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}>
               {login.socialAuth.map((social, index) => {
-                const getIcon = () => {
+                const getLogo = () => {
                   switch (social.provider) {
                     case 'google':
-                      return <Chrome className="w-5 h-5 mr-3 text-primary transition-transform group-hover:scale-110" />
+                      return <img src={GoogleLogo} alt="Google" className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" />;
                     case 'facebook':
-                      return <div className="w-5 h-5 mr-3 bg-blue-600 dark:bg-blue-500 rounded transition-transform group-hover:scale-110" />
+                      return <img src={FacebookLogo} alt="Facebook" className="w-5 h-5 mr-3 transition-transform group-hover:scale-110" />;
                     case 'github':
-                      return <Github className="w-5 h-5 mr-3 text-themed transition-transform group-hover:scale-110" />
+                      return <Github className="w-5 h-5 mr-3 text-themed transition-transform group-hover:scale-110" />;
                     case 'apple':
-                      return <Apple className="w-5 h-5 mr-3 text-themed transition-transform group-hover:scale-110" />
+                      return <Apple className="w-5 h-5 mr-3 text-themed transition-transform group-hover:scale-110" />;
                     default:
-                      return null
-                  }
+                      return null;
                 }
+              };
 
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleSocialSignIn(social.provider)}
-                    className={`group w-full flex items-center justify-center px-4 py-3 border border-themed/20 dark:border-slate-600/30 rounded-lg surface dark:bg-slate-800/60 hover:bg-themed/5 dark:hover:bg-slate-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-black/30 animate-fade-in-up backdrop-blur-sm ${
-                      isVisible ? '' : 'opacity-0'
-                    }`}
-                    data-delay={`${(index + 10) * 100}ms`}
-                  >
-                    {getIcon()}
-                    <span className="text-themed font-medium">
-                      {social.text}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleSocialSignIn(social.provider)}
+                  className={`group w-full flex items-center justify-center px-4 py-3 border border-themed/20 dark:border-slate-600/30 rounded-lg surface dark:bg-slate-800/60 hover:bg-themed/5 dark:hover:bg-slate-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-black/30 animate-fade-in-up backdrop-blur-sm ${
+                    isVisible ? '' : 'opacity-0'
+                  }`}
+                  data-delay={`${(index + 10) * 100}ms`}
+                >
+                  {getLogo()}
+                  <span className="text-themed font-medium">
+                    {social.text}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Divider */}
+          {/* Divider */}
               <div className="relative transition-all duration-500 delay-1100 ${
               isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }">
@@ -382,16 +384,7 @@ const SignIn: React.FC = () => {
               </button>
             </form>
 
-            {/* Success Message */}
-            {/* Demo note */}
-            <div className="border-t border-themed/10 pt-4 mt-4 text-sm text-muted text-center">
-              <p>Demo Login Tips:</p>
-              <ul className="mt-1">
-                <li>Use any email containing "admin" for Admin role</li>
-                <li>Use any other email for User role</li>
-                <li>Password can be anything</li>
-              </ul>
-            </div>
+            
 
             {/* Sign Up Link */}
             <div className={`text-center transition-all duration-500 delay-1500 ${

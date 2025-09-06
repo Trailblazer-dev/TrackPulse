@@ -6,10 +6,6 @@ import { authRoutes } from './authRoutes';
 import { userRoutes } from './userRoutes';
 import { adminRoutes } from './adminRoutes';
 import ProtectedRoute from './ProtectedRoute';
-import DemoModeBanner from '../components/common/DemoModeBanner';
-
-// Combine all routes
-// (Removed unused allRoutes variable)
 
 // NotFound component
 const NotFound = () => (
@@ -29,60 +25,58 @@ const NotFound = () => (
 
 const AppRoutes: React.FC = () => {
   return (
-    <>
-      <DemoModeBanner />
-      <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><Spinner /></div>}>
-        <Routes>
-          {/* Guest Routes - Accessible to everyone */}
-          {guestRoutes.map((route) => (
-            <Route 
-              key={route.path as string} 
-              path={route.path as string} 
-              element={route.element} 
-            />
-          ))}
-          
-          {/* Auth Routes - Accessible to everyone */}
-          {authRoutes.map((route) => (
-            <Route 
-              key={route.path as string} 
-              path={route.path as string} 
-              element={route.element} 
-            />
-          ))}
-          
-          {/* User Routes - Protected */}
-          {userRoutes.map((route) => (
-            <Route 
-              key={route.path as string} 
-              path={route.path as string} 
-              element={
-                <ProtectedRoute requiredRole={['user', 'admin']} redirectTo="/signin">
-                  {route.element}
-                </ProtectedRoute>
-              } 
-            />
-          ))}
-          
-          {/* Admin Routes - Protected */}
-          {adminRoutes.map((route) => (
-            <Route 
-              key={route.path as string} 
-              path={route.path as string} 
-              element={
-                <ProtectedRoute requiredRole="admin" redirectTo="/signin">
-                  {route.element}
-                </ProtectedRoute>
-              } 
-            />
-          ))}
-          
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </>
+    <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><Spinner /></div>}>
+      <Routes>
+        {/* Guest Routes - Accessible to everyone */}
+        {guestRoutes.map((route) => (
+          <Route 
+            key={route.path as string} 
+            path={route.path as string} 
+            element={route.element} 
+          />
+        ))}
+        
+        {/* Auth Routes - Accessible to everyone */}
+        {authRoutes.map((route) => (
+          <Route 
+            key={route.path as string} 
+            path={route.path as string} 
+            element={route.element} 
+          />
+        ))}
+        
+        {/* User Routes - Protected */}
+        {userRoutes.map((route) => (
+          <Route 
+            key={route.path as string} 
+            path={route.path as string} 
+            element={
+              <ProtectedRoute requiredRole={['user', 'admin']} redirectTo="/signin">
+                {route.element}
+              </ProtectedRoute>
+            } 
+          />
+        ))}
+        
+        {/* Admin Routes - Protected */}
+        {adminRoutes.map((route) => (
+          <Route 
+            key={route.path as string} 
+            path={route.path as string} 
+            element={
+              <ProtectedRoute requiredRole="admin" redirectTo="/signin">
+                {route.element}
+              </ProtectedRoute>
+            } 
+          />
+        ))}
+        
+        {/* 404 Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 
 export default AppRoutes;
+        

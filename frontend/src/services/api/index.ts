@@ -1,50 +1,45 @@
-// import axios from 'axios';
+import axios from 'axios';
 
-// // Create axios instance with default configs
-// const api = axios.create({
-//   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-//   timeout: 15000, // 15 seconds
-// });
+// Get the base API URL from environment or default to local development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-// // Request interceptor for adding auth token, etc.
-// api.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('accessToken');
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
+// Create axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-// // Response interceptor for handling common errors
-// api.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     const { response } = error;
-    
-//     // Handle token expiration/auth errors
-//     if (response && response.status === 401) {
-//       // Clear local storage and redirect to login
-//       localStorage.removeItem('accessToken');
-//       window.location.href = '/login';
-//     }
-    
-//     // Handle server errors
-//     if (response && response.status >= 500) {
-//       console.error('Server error occurred:', error);
-//       // You could trigger a notification here
-//     }
-    
-//     return Promise.reject(error);
-//   }
-// );
+// Request interceptor to add auth token to requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// export default api;
+// Response interceptor to handle common errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle authentication errors
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      if (window.location.pathname !== '/signin' && window.location.pathname !== '/') {
+        window.location.href = '/signin';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
 
 // // Export all API services
 // export * from './types';
@@ -66,6 +61,11 @@
 // export * from './admin/users';
 // export * from './admin/metrics';
 // export * from './admin/reports';
+// export * from './admin/auditLogs';
+// export * from './admin/dataManagement';
+
+// // Shared services
+// export * from './settings';
 // export * from './admin/auditLogs';
 // export * from './admin/dataManagement';
 

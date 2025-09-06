@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { roleService, type UserRole } from '../utils/roleService';
+import { authService, type UserRole } from '../services/api/auth';
 
 interface ProtectedRouteProps {
   requiredRole: UserRole | UserRole[];
@@ -13,17 +13,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   redirectTo = '/'
 }) => {
-  const currentRole = roleService.getCurrentRole();
+  const isAuthenticated = authService.isAuthenticated();
+  const currentRole = authService.getCurrentRole();
+  
+  // If not authenticated at all, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/signin" replace />;
+  }
   
   // Check if user has permission based on their role
   const hasAccess = Array.isArray(requiredRole)
     ? requiredRole.includes(currentRole)
     : currentRole === requiredRole;
-    
-  // Special handling for 'guest' - they should only see guest routes
-  if (currentRole === 'guest' && requiredRole !== 'guest') {
-    return <Navigate to={redirectTo} replace />;
-  }
     
   if (!hasAccess) {
     // Redirect to appropriate page based on role

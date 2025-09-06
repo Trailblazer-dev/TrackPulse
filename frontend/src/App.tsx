@@ -9,7 +9,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen ">
+      <div className="min-h-screen">
         <AppRoutes />
         <ThemeTransitionOverlay isVisible={isTransitioning} theme={theme} />
         <Analytics />

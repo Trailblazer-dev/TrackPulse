@@ -6,7 +6,7 @@ import { header as guestHeader } from '../../utils/guest/guest'
 import { header as userHeader } from '../../utils/user/user'
 import { header as adminHeader } from '../../utils/admin/admin'
 import type { HeaderConfig } from './headerConfigs'
-import { roleService } from '../../utils/roleService'
+import { authService } from '../../services/api/auth'
 
 interface HeaderProps {
   config?: HeaderConfig
@@ -14,7 +14,20 @@ interface HeaderProps {
 
 const Header = ({ config }: HeaderProps) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [userData, setUserData] = useState(authService.getUserData());
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Listen for auth changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setUserData(authService.getUserData());
+    };
+    
+    window.addEventListener('auth_changed', handleAuthChange);
+    return () => {
+      window.removeEventListener('auth_changed', handleAuthChange);
+    };
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -33,7 +46,7 @@ const Header = ({ config }: HeaderProps) => {
   // Handle logout action
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    roleService.clearRole();
+    authService.logout();
     setIsProfileDropdownOpen(false);
     
     // Use window.location instead of navigate hook
@@ -47,7 +60,7 @@ const Header = ({ config }: HeaderProps) => {
     const userPrefixes = ['/dashboard', '/analytics', '/reports', '/bookmarks', '/settings']
     const adminPrefixes = ['/admin', '/admin/users', '/admin/metrics', '/admin/data-management', '/admin/report-builder', '/admin/audit-logs']
     
-    const currentRole = roleService.getCurrentRole();
+    const currentRole = authService.getCurrentRole();
     
     if (adminPrefixes.some(prefix => path.startsWith(prefix))) {
       headerConfig = {
@@ -58,9 +71,9 @@ const Header = ({ config }: HeaderProps) => {
           text: 'TrackPulse'
         },
         user: {
-          name: adminHeader.profile?.name ?? 'Admin',
-          avatar: adminHeader.profile?.avatar ?? 'A',
-          role: adminHeader.profile?.showAdminBadge ? 'ADMIN' : undefined,
+          name: userData?.name ?? 'Admin',
+          avatar: userData?.avatar ?? 'A',
+          role: 'ADMIN',
           dropdown: [
             { text: "Profile", href: "/settings" },
             { text: "Logout", href: "#", action: handleLogout },
@@ -79,8 +92,8 @@ const Header = ({ config }: HeaderProps) => {
           text: 'TrackPulse'
         },
         user: {
-          name: userHeader.profile?.name ?? 'User',
-          avatar: userHeader.profile?.avatar ?? 'U',
+          name: userData?.name ?? 'User',
+          avatar: userData?.avatar ?? 'U',
           role: currentRole === 'admin' ? 'ADMIN' : 'USER',
           dropdown: [
             { text: "Profile", href: "/settings" },

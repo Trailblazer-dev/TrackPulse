@@ -2,9 +2,6 @@ import React, { useState } from "react";
 import {
   Eye,
   EyeOff,
-  Github,
-  Chrome,
-  Apple,
   Mail,
   Lock,
   User,
@@ -13,6 +10,9 @@ import {
 import { register } from "../utils/auth";
 import InlineSpinner from "../components/common/InlineSpinner";
 import AuthLayout from "../layouts/AuthLayout";
+// Import logo images for social sign-up
+import FacebookLogo from "../assets/Facebook_logo_(square).png"; 
+import GoogleLogo from "../assets/google_logo.webp"; 
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -106,6 +106,8 @@ const Register: React.FC = () => {
 
   const handleSocialSignUp = (provider: string) => {
     console.log(`Signing up with ${provider}`);
+    // This will be implemented when social auth is ready
+    window.location.href = `/api/auth/${provider}`;
   };
 
   const handleCaptchaVerification = () => {
@@ -196,35 +198,25 @@ const Register: React.FC = () => {
               </div>
             )}
 
-            {/* Social Sign Up */}
+            {/* Social Sign Up - Updated with only Google and Facebook */}
             <div className="space-y-3">
               <button
                 onClick={() => handleSocialSignUp("google")}
                 className="w-full flex items-center justify-center px-4 py-3 border border-themed/20 dark:border-slate-600/30 rounded-lg surface dark:bg-slate-800/60 hover:bg-themed/5 dark:hover:bg-slate-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md dark:hover:shadow-black/30 backdrop-blur-sm"
               >
-                <Chrome className="w-5 h-5 mr-3 text-primary" />
+                <img src={GoogleLogo} alt="Google" className="w-5 h-5 mr-3" />
                 <span className="text-themed font-medium">
                   Continue with Google
                 </span>
               </button>
 
               <button
-                onClick={() => handleSocialSignUp("github")}
+                onClick={() => handleSocialSignUp("facebook")}
                 className="w-full flex items-center justify-center px-4 py-3 border border-themed/20 dark:border-slate-600/30 rounded-lg surface dark:bg-slate-800/60 hover:bg-themed/5 dark:hover:bg-slate-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md dark:hover:shadow-black/30 backdrop-blur-sm"
               >
-                <Github className="w-5 h-5 mr-3 text-themed" />
+                <img src={FacebookLogo} alt="Facebook" className="w-5 h-5 mr-3" />
                 <span className="text-themed font-medium">
-                  Continue with GitHub
-                </span>
-              </button>
-
-              <button
-                onClick={() => handleSocialSignUp("apple")}
-                className="w-full flex items-center justify-center px-4 py-3 border border-themed/20 dark:border-slate-600/30 rounded-lg surface dark:bg-slate-800/60 hover:bg-themed/5 dark:hover:bg-slate-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md dark:hover:shadow-black/30 backdrop-blur-sm"
-              >
-                <Apple className="w-5 h-5 mr-3 text-themed" />
-                <span className="text-themed font-medium">
-                  Continue with Apple
+                  Continue with Facebook
                 </span>
               </button>
             </div>
@@ -491,3 +483,4 @@ const Register: React.FC = () => {
 };
 
 export default Register;
+          

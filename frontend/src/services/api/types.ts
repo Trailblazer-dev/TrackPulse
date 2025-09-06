@@ -1,8 +1,10 @@
-// export interface ApiResponse<T> {
-//   data: T;
-//   status: number;
-//   message: string;
-// }
+// Common API response interface
+export interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+  errors?: string[];
+}
 
 // export interface PaginationParams {
 //   page: number;
