@@ -79,16 +79,18 @@ const SignIn: React.FC = () => {
       const response = await authService.login({
         email: formData.email,
         password: formData.password,
-        rememberMe: formData.rememberMe
+        rememberMe: formData.rememberMe,
       });
-      
-      // Redirect based on user role
-      const userData = response.data.user;
-      const redirectPath = userData.role === 'admin' ? '/admin' : '/dashboard';
-      window.location.href = redirectPath;
-      
+
+      console.log("Login successful:", response);
+
+      // Redirect to dashboard on success
+      window.location.href = "/dashboard";
     } catch (error: any) {
-      setErrors({ submit: error.message || 'Invalid credentials. Please try again.' });
+      console.error("Login error:", error);
+      setErrors({
+        submit: error.message || "Invalid credentials. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }

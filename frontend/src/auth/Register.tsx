@@ -8,18 +8,28 @@ import {
   Shield,
 } from "lucide-react";
 import { register } from "../utils/auth";
+import { authService } from "../services/api/auth";
 import InlineSpinner from "../components/common/InlineSpinner";
 import AuthLayout from "../layouts/AuthLayout";
 // Import logo images for social sign-up
 import FacebookLogo from "../assets/Facebook_logo_(square).png"; 
 import GoogleLogo from "../assets/google_logo.webp"; 
 
+// Add interface for register data
+interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword?: string; // Remove this from API call
+  termsAccepted: boolean;
+  newsletterSubscribe: boolean;
+}
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    // confirmPassword: "",
     termsAccepted: false,
     newsletterSubscribe: false,
   });
@@ -89,25 +99,55 @@ const Register: React.FC = () => {
     setErrors({});
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Prepare data for API (match backend expectations)
+      const apiData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        password_confirm: formData.password, // For now, use same password
+        // Remove fields that backend doesn't expect
+      };
 
-      // Mock success response
-      setShowSuccess(true);
-      setTimeout(() => {
-        window.location.href = "/signin";
-      }, 3000);
-    } catch {
-      setErrors({ submit: "Something went wrong. Please try again." });
+      console.log("Sending registration data:", apiData);
+
+      // Use the actual API call
+      const response = await authService.register(apiData);
+
+      // Handle successful registration
+      if (response.status >= 200 && response.status < 300) {
+        setShowSuccess(true);
+
+        // Store user data and token if available
+        if (response.data) {
+          localStorage.setItem("user_data", JSON.stringify(response.data));
+        }
+
+        // Redirect to dashboard after success
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 2000);
+      } else {
+        setErrors({
+          submit: response.message || "Registration failed. Please try again.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+
+      // Use the error message from authService
+      setErrors({
+        submit: error.message || "Something went wrong. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+
   const handleSocialSignUp = (provider: string) => {
     console.log(`Signing up with ${provider}`);
     // This will be implemented when social auth is ready
-    window.location.href = `/api/auth/${provider}`;
+    window.location.href = `/auth/${provider}`;
   };
 
   const handleCaptchaVerification = () => {

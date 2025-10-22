@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get the base API URL from environment or default to local development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
 // Create axios instance
 const api = axios.create({
@@ -41,33 +41,33 @@ api.interceptors.response.use(
 
 export default api;
 
-// // Export all API services
-// export * from './types';
-// export * from './auth';
+// Export all API services
+export * from './types';
+export * from './auth';
 
-// // Guest services
-// export * from './guest/explore';
-// export * from './guest/contact';
-// export * from './guest/newsletter';
+// Guest services
+export * from './guest/explore';
+export * from './guest/contact';
+export * from './guest/newsletter';
 
-// // User services
-// export * from './user/dashboard';
-// export * from './user/analytics';
-// export * from './user/reports';
-// export * from './user/bookmarks';
+// User services
+export * from './user/dashboard';
+export * from './user/analytics';
+export * from './user/reports';
+export * from './user/bookmarks';
 
-// // Admin services
-// export * from './admin/dashboard';
-// export * from './admin/users';
-// export * from './admin/metrics';
-// export * from './admin/reports';
-// export * from './admin/auditLogs';
-// export * from './admin/dataManagement';
+// Admin services
+export * from './admin/dashboard';
+export * from './admin/users';
+export * from './admin/metrics';
+export * from './admin/reports';
+export * from './admin/auditLogs';
+export * from './admin/dataManagement';
 
-// // Shared services
-// export * from './settings';
-// export * from './admin/auditLogs';
-// export * from './admin/dataManagement';
+// Shared services
+export * from './settings';
+export * from './admin/auditLogs';
+export * from './admin/dataManagement';
 
-// // Shared services
-// export * from './settings';
+// Shared services
+export * from './settings';
