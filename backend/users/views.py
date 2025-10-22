@@ -36,32 +36,33 @@ def login(request):
     Authenticate user and return token
     """
     email = request.data.get('email')
-    username = request.data.get('username') 
+    # username = request.data.get('username') 
     password = request.data.get('password')
     
     # Try to authenticate with email first (our custom user model uses email as USERNAME_FIELD)
     user = None
     if email and password:
         user = authenticate(username=email, password=password)
-    elif username and password:
-        # Also try with username for backward compatibility
-        # First try to find user by username, then authenticate with their email
-        try:
-            user_obj = User.objects.get(username=username)
-            user = authenticate(username=user_obj.email, password=password)
-        except User.DoesNotExist:
-            user = None
+    # elif username and password:
+    #     # Also try with username for backward compatibility
+    #     # First try to find user by username, then authenticate with their email
+    #     try:
+    #         user_obj = User.objects.get(username=username)
+    #         user = authenticate(username=user_obj.email, password=password)
+    #     except User.DoesNotExist:
+    #         user = None
+        
+
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'user_id': user.user_id,
+                'username': user.username,
+                'email': user.email
+            }, status=status.HTTP_200_OK)
     
-    if user:
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'user_id': user.user_id,
-            'username': user.username,
-            'email': user.email
-        }, status=status.HTTP_200_OK)
-    else:
-        return Response({
+    return Response({
             'error': 'Invalid credentials'
         }, status=status.HTTP_401_UNAUTHORIZED)
 
