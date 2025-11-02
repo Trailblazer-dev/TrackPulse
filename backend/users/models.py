@@ -1,6 +1,7 @@
 
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+import uuid
 
 
 
@@ -20,11 +21,11 @@ class UserAccountManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('role', 'admin')
         return self.create_user(email, username, password, **extra_fields)
-
+    
 
 # --- Custom UserAccount Model ---
 class UserAccount(AbstractBaseUser, PermissionsMixin):
-    user_id = models.AutoField(primary_key=True)
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
     first_name = models.CharField(max_length=50, blank=True)
@@ -49,6 +50,12 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def id(self):
+        """Alias for user_id to make JWT work"""
+        return self.user_id
+
 
 
 # --- Permission Model ---
@@ -130,4 +137,4 @@ class UserProfile(models.Model):
         db_table = 'users_userprofile'
 
     def __str__(self):
-        return f"{self.user.full_name}'s Profile"
+        return f"{self.user.username}'s Profile"

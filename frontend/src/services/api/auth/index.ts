@@ -26,27 +26,28 @@ export interface UserData {
 
 export interface AuthResponse {
   token: string;
+  refresh_token?: string;
   user: UserData;
   user_id?: string;
 }
 
 // Backend response interfaces
 interface BackendAuthResponse {
-  token: string;
+  access: string; // JWT access token
+  refresh: string; // JWT refresh token
   user_id: string;
   username: string;
   email: string;
 }
 
 interface BackendRegisterResponse {
-  token: string;
+  access: string; // JWT access token
+  refresh: string; // JWT refresh token
   user_id: string;
   username: string;
   email: string;
 }
 
-
-// Add these missing interfaces at the top
 export interface PasswordResetRequest {
   email: string;
 }
@@ -59,14 +60,17 @@ export interface PasswordResetConfirm {
 
 // Token storage keys
 const TOKEN_STORAGE_KEY = "auth_token";
+const REFRESH_TOKEN_STORAGE_KEY = "refresh_token";
 const USER_STORAGE_KEY = "user_data";
 
 export const authService = {
-  // Login user - FIXED
+  // Login user - UPDATED FOR JWT
   login: async (
     credentials: AuthCredentials
   ): Promise<ApiResponse<AuthResponse>> => {
     try {
+      console.log("Attempting login with:", credentials.email);
+
       const response = await api.post<BackendAuthResponse>(
         "/users/auth/login/",
         {
@@ -76,6 +80,7 @@ export const authService = {
       );
 
       const backendData = response.data;
+      console.log("Login response received:", backendData);
 
       // Create frontend-compatible response
       const userData: UserData = {
@@ -86,13 +91,14 @@ export const authService = {
       };
 
       const authResponse: AuthResponse = {
-        token: backendData.token,
+        token: backendData.access, // JWT access token
+        refresh_token: backendData.refresh, // JWT refresh token
         user: userData,
         user_id: backendData.user_id,
       };
 
-      console.log("Login successful:", authResponse);
-      authService.setSession(userData, backendData.token);
+      console.log("Login successful, setting session...");
+      authService.setSession(userData, backendData.access, backendData.refresh);
 
       return {
         data: authResponse,
@@ -102,7 +108,6 @@ export const authService = {
     } catch (error: any) {
       console.error("Login error:", error);
 
-      // Handle different error formats
       let errorMessage = "Login failed";
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
@@ -116,17 +121,17 @@ export const authService = {
     }
   },
 
-  // Register new user - FIXED
+  // Register new user - UPDATED FOR JWT
   register: async (
     userData: RegisterData
   ): Promise<ApiResponse<AuthResponse>> => {
     try {
-      // Prepare data for backend (match your Django serializer)
+      // Prepare data for backend
       const apiData = {
         username: userData.username,
         email: userData.email,
         password: userData.password,
-        password_confirm: userData.password, // For now, use same password
+        password_confirm: userData.password_confirm, // Use the actual confirm password
       };
 
       console.log("Registering user with data:", apiData);
@@ -147,13 +152,18 @@ export const authService = {
       };
 
       const authResponse: AuthResponse = {
-        token: backendData.token,
+        token: backendData.access, // JWT access token
+        refresh_token: backendData.refresh, // JWT refresh token
         user: newUserData,
         user_id: backendData.user_id,
       };
 
       console.log("Registration successful:", authResponse);
-      authService.setSession(newUserData, backendData.token);
+      authService.setSession(
+        newUserData,
+        backendData.access,
+        backendData.refresh
+      );
 
       return {
         data: authResponse,
@@ -163,12 +173,10 @@ export const authService = {
     } catch (error: any) {
       console.error("Registration error:", error);
 
-      // Handle backend validation errors
       let errorMessage = "Registration failed";
       if (error.response?.data) {
         const backendErrors = error.response.data;
 
-        // Handle field-specific errors
         if (typeof backendErrors === "object") {
           const errorMessages = [];
           for (const [key, value] of Object.entries(backendErrors)) {
@@ -192,125 +200,54 @@ export const authService = {
     }
   },
 
-  // Logout user
+  // Logout user - UPDATED FOR JWT
   logout: async (): Promise<ApiResponse<null>> => {
     try {
-      // Call backend logout endpoint
-      await api.post("/users/auth/logout/");
+      const token = authService.getToken();
+      console.log("Logout initiated, token present:", !!token);
+
+      // Call backend logout
+      const response = await api.post("/users/auth/logout/");
+      console.log("Backend logout response:", response.data);
 
       // Clear session data
       authService.clearSession();
 
       return {
         data: null,
+        status: response.status,
+        message: response.data?.message || "Logged out successfully",
+      };
+    } catch (error: any) {
+      console.error("Logout process error:", error);
+
+      // Always clear session, even if API call fails
+      authService.clearSession();
+
+      // For JWT, logout is client-side anyway
+      return {
+        data: null,
         status: 200,
         message: "Logged out successfully",
       };
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Clear session even if API call fails
-      authService.clearSession();
-      throw error;
     }
   },
 
-  // Get current user info
-  getCurrentUser: async (): Promise<ApiResponse<UserData>> => {
-    try {
-      const response = await api.get("/users/me/");
-      const backendData = response.data;
-
-      const userData: UserData = {
-        id: backendData.user_id,
-        username: backendData.username,
-        email: backendData.email,
-        role: "user",
-        avatar: backendData.profile?.avatar,
-      };
-
-      return {
-        data: userData,
-        status: response.status,
-        message: "User data retrieved successfully",
-      };
-    } catch (error) {
-      console.error("Get current user error:", error);
-      throw error;
-    }
-  },
-
-  // Request password reset
-  forgotPassword: async (
-    data: PasswordResetRequest
-  ): Promise<ApiResponse<null>> => {
-    try {
-      // When API is ready:
-      // const response = await api.post<ApiResponse<null>>('/auth/forgot-password', data);
-      // return response.data;
-
-      // Mock response for now
-      return {
-        data: null,
-        status: 200,
-        message: "Password reset instructions sent to your email",
-      };
-    } catch (error) {
-      console.error("Forgot password error:", error);
-      throw error;
-    }
-  },
-
-  // Reset password with token
-  resetPassword: async (
-    data: PasswordResetConfirm
-  ): Promise<ApiResponse<null>> => {
-    try {
-      // When API is ready:
-      // const response = await api.post<ApiResponse<null>>('/auth/reset-password', data);
-      // return response.data;
-
-      // Mock response for now
-      return {
-        data: null,
-        status: 200,
-        message: "Password reset successful",
-      };
-    } catch (error) {
-      console.error("Reset password error:", error);
-      throw error;
-    }
-  },
-
-  // Validate reset token
-  validateToken: async (
-    token: string
-  ): Promise<ApiResponse<{ valid: boolean }>> => {
-    try {
-      // When API is ready:
-      // const response = await api.post<ApiResponse<{ valid: boolean }>>('/auth/validate-token', { token });
-      // return response.data;
-
-      // Mock response for now
-      return {
-        data: { valid: true },
-        status: 200,
-        message: "Token is valid",
-      };
-    } catch (error) {
-      console.error("Token validation error:", error);
-      throw error;
-    }
-  },
-
-  // Session management functions
-
-  // Store user session data
-  setSession: (userData: UserData, token: string): void => {
+  // Session management functions - UPDATED FOR JWT
+  setSession: (
+    userData: UserData,
+    accessToken: string,
+    refreshToken?: string
+  ): void => {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
 
-    // Set default authorization header for future requests
-    api.defaults.headers.common["Authorization"] = `Token ${token}`;
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+    }
+
+    // Set default authorization header for future requests - USE Bearer FOR JWT
+    api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
     // Dispatch event for components that need to react to auth changes
     window.dispatchEvent(
@@ -321,6 +258,7 @@ export const authService = {
   // Clear user session data
   clearSession: (): void => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
 
     // Remove authorization header
@@ -338,8 +276,8 @@ export const authService = {
     const userData = authService.getUserData();
 
     if (token && userData) {
-      // Set authorization header for future requests
-      api.defaults.headers.common["Authorization"] = `Token ${token}`;
+      // Set default authorization header for future requests - USE Bearer FOR JWT
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
   },
 
@@ -375,6 +313,11 @@ export const authService = {
     return localStorage.getItem(TOKEN_STORAGE_KEY);
   },
 
+  // Get refresh token
+  getRefreshToken: (): string | null => {
+    return localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  },
+
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -389,6 +332,40 @@ export const authService = {
     }
 
     return currentRole === requiredRole;
+  },
+
+  // Refresh token method (for future use)
+  refreshToken: async (): Promise<ApiResponse<{ access: string }>> => {
+    try {
+      const refreshToken = authService.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error("No refresh token available");
+      }
+
+      const response = await api.post<{ access: string }>(
+        "/users/auth/token/refresh/",
+        {
+          refresh: refreshToken,
+        }
+      );
+
+      const newAccessToken = response.data.access;
+
+      // Update the stored access token
+      localStorage.setItem(TOKEN_STORAGE_KEY, newAccessToken);
+      api.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
+
+      return {
+        data: response.data,
+        status: response.status,
+        message: "Token refreshed successfully",
+      };
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      // Clear session if refresh fails
+      authService.clearSession();
+      throw error;
+    }
   },
 };
 

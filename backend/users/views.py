@@ -3,9 +3,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
 from .models import UserProfile
 from .serializers import UserRegistrationSerializer, UserProfileSerializer, UserSerializer
+from .tokens import CustomTokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -14,15 +16,19 @@ User = get_user_model()
 @permission_classes([AllowAny])
 def register(request):
     """
-    Register a new user
+    Register a new user and return JWT tokens
     """
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        token, created = Token.objects.get_or_create(user=user)
+        
+        # Generate JWT tokens using custom serializer
+        refresh = CustomTokenObtainPairSerializer.get_token(user)
+        
         return Response({
-            'token': token.key,
-            'user_id': user.user_id,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user_id': str(user.user_id),
             'username': user.username,
             'email': user.email
         }, status=status.HTTP_201_CREATED)
@@ -33,57 +39,53 @@ def register(request):
 @permission_classes([AllowAny])
 def login(request):
     """
-    Authenticate user and return token
+    Authenticate user and return JWT tokens using custom serializer
     """
     email = request.data.get('email')
-    # username = request.data.get('username') 
     password = request.data.get('password')
     
-    # Try to authenticate with email first (our custom user model uses email as USERNAME_FIELD)
-    user = None
     if email and password:
         user = authenticate(username=email, password=password)
-    # elif username and password:
-    #     # Also try with username for backward compatibility
-    #     # First try to find user by username, then authenticate with their email
-    #     try:
-    #         user_obj = User.objects.get(username=username)
-    #         user = authenticate(username=user_obj.email, password=password)
-    #     except User.DoesNotExist:
-    #         user = None
-        
-
         if user:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({
-                'token': token.key,
-                'user_id': user.user_id,
-                'username': user.username,
-                'email': user.email
-            }, status=status.HTTP_200_OK)
+            try:
+                # Use the custom serializer to generate tokens
+                refresh = CustomTokenObtainPairSerializer.get_token(user)
+                access_token = refresh.access_token
+                
+                # Manually add the custom claims to the response
+                return Response({
+                    'refresh': str(refresh),
+                    'access': str(access_token),
+                    'user_id': str(user.user_id),
+                    'username': user.username,
+                    'email': user.email
+                }, status=status.HTTP_200_OK)
+            except Exception as e:
+                print(f"JWT Token generation error: {e}")
+                return Response({
+                    'error': 'Token generation failed'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     return Response({
-            'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
+        'error': 'Invalid credentials'
+    }, status=status.HTTP_401_UNAUTHORIZED)
+    
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout(request):
     """
-    Logout user by deleting token
+    Logout user - with JWT, we just return success since tokens are stateless
     """
-    try:
-        request.user.auth_token.delete()
-        return Response({
-            'message': 'Successfully logged out'
-        }, status=status.HTTP_200_OK)
-    except:
-        return Response({
-            'error': 'Error logging out'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-
+    # With JWT, logout is handled on the client side by discarding tokens
+    # You could also implement a blacklist if needed
+    return Response({
+        'message': 'Successfully logged out'
+    }, status=status.HTTP_200_OK)
+    
+        
+        
+        
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
     Retrieve and update user profile

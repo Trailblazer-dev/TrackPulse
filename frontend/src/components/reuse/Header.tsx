@@ -44,13 +44,30 @@ const Header = ({ config }: HeaderProps) => {
   }, []);
   
   // Handle logout action
-  const handleLogout = (e: React.MouseEvent) => {
+  const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
-    authService.logout();
-    setIsProfileDropdownOpen(false);
-    
-    // Use window.location instead of navigate hook
-    window.location.href = '/';
+
+    try {
+      console.log("Attempting logout...");
+      await authService.logout();
+      console.log("Logout successful");
+
+      setIsProfileDropdownOpen(false);
+
+      // Redirect to home page
+      window.location.href = "/";
+    } catch (error: any) {
+      console.error("Logout error:", error);
+
+      // Even if API call fails, clear local session
+      authService.clearSession();
+
+      // Show error message to user
+      alert("Logout completed (session cleared locally)");
+
+      // Still redirect to home
+      window.location.href = "/";
+    }
   };
   
   // Determine which header config to use based on route if not explicitly provided
