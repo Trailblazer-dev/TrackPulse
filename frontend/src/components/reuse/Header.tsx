@@ -6,28 +6,18 @@ import { header as guestHeader } from '../../utils/guest/guest'
 import { header as userHeader } from '../../utils/user/user'
 import { header as adminHeader } from '../../utils/admin/admin'
 import type { HeaderConfig } from './headerConfigs'
-import { authService } from '../../services/api/auth'
+import { useAuth } from '../../contexts/UserContext'
+import { useAuthService } from '../../services/api/auth'
 
 interface HeaderProps {
   config?: HeaderConfig
 }
 
 const Header = ({ config }: HeaderProps) => {
+  const { user, logout } = useAuth();
+  const { logout: apiLogout } = useAuthService();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [userData, setUserData] = useState(authService.getUserData());
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Listen for auth changes
-  useEffect(() => {
-    const handleAuthChange = () => {
-      setUserData(authService.getUserData());
-    };
-    
-    window.addEventListener('auth_changed', handleAuthChange);
-    return () => {
-      window.removeEventListener('auth_changed', handleAuthChange);
-    };
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -46,38 +36,28 @@ const Header = ({ config }: HeaderProps) => {
   // Handle logout action
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
-
     try {
       console.log("Attempting logout...");
-      await authService.logout();
+      await apiLogout();
+      logout(); // This will clear the context
       console.log("Logout successful");
-
       setIsProfileDropdownOpen(false);
-
-      // Redirect to home page
       window.location.href = "/";
-    } catch (error: any) {
+    } catch (error) {
       console.error("Logout error:", error);
-
-      // Even if API call fails, clear local session
-      authService.clearSession();
-
-      // Show error message to user
-      alert("Logout completed (session cleared locally)");
-
-      // Still redirect to home
+      // The context logout will still be called in the service
       window.location.href = "/";
     }
   };
   
   // Determine which header config to use based on route if not explicitly provided
-  let headerConfig: any = config
+  let headerConfig: HeaderConfig | undefined = config;
   if (!headerConfig) {
     const path = window.location.pathname
     const userPrefixes = ['/dashboard', '/analytics', '/reports', '/bookmarks', '/settings']
     const adminPrefixes = ['/admin', '/admin/users', '/admin/metrics', '/admin/data-management', '/admin/report-builder', '/admin/audit-logs']
     
-    const currentRole = authService.getCurrentRole();
+    const currentRole = user?.role || 'guest';
     
     if (adminPrefixes.some(prefix => path.startsWith(prefix))) {
       headerConfig = {
@@ -88,8 +68,8 @@ const Header = ({ config }: HeaderProps) => {
           text: 'TrackPulse'
         },
         user: {
-          name: userData?.name ?? 'Admin',
-          avatar: userData?.avatar ?? 'A',
+          username: user?.username ?? 'Admin',
+          avatar: user?.avatar ?? 'A',
           role: 'ADMIN',
           dropdown: [
             { text: "Profile", href: "/settings" },
@@ -109,8 +89,8 @@ const Header = ({ config }: HeaderProps) => {
           text: 'TrackPulse'
         },
         user: {
-          name: userData?.name ?? 'User',
-          avatar: userData?.avatar ?? 'U',
+          username: user?.username ?? 'User',
+          avatar: user?.avatar ?? 'U',
           role: currentRole === 'admin' ? 'ADMIN' : 'USER',
           dropdown: [
             { text: "Profile", href: "/settings" },
@@ -335,7 +315,7 @@ const Header = ({ config }: HeaderProps) => {
                       {headerConfig.user.avatar}
                     </div>
                     <span className={`text-sm font-medium hidden sm:block transition-colors duration-200 ${themeClasses.logo}`}>
-                      {headerConfig.user.name}
+                      {headerConfig.user.username}
                     </span>
                     <ChevronDown 
                       className="h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200" 
@@ -348,12 +328,12 @@ const Header = ({ config }: HeaderProps) => {
                     <div className={dropdownClasses}>
                       <div className={dropdownHeaderClasses}>
                         <p className={isDarkMode ? "text-sm font-medium text-gray-200" : "text-sm font-medium text-gray-800"}>
-                          {headerConfig.user.name}
+                          {headerConfig.user.username}
                         </p>
                       </div>
                       <div className="py-1">
                         {headerConfig.user.dropdown && headerConfig.user.dropdown.length > 0 ? (
-                          headerConfig.user.dropdown.map((item: any, index: number) => (
+                          headerConfig.user.dropdown.map((item: { text: string; href: string; action?: (e: React.MouseEvent) => void }, index: number) => (
                             item.action ? (
                               <button
                                 key={index}

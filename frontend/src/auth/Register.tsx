@@ -7,29 +7,21 @@ import {
   User,
   Shield,
 } from "lucide-react";
-import { register } from "../utils/auth";
-import { authService } from "../services/api/auth";
+import { useAuthService } from "../services/api/auth";
+import { register as registerContent } from "../utils/auth";
 import InlineSpinner from "../components/common/InlineSpinner";
 import AuthLayout from "../layouts/AuthLayout";
 // Import logo images for social sign-up
 import FacebookLogo from "../assets/Facebook_logo_(square).png"; 
 import GoogleLogo from "../assets/google_logo.webp"; 
 
-// Add interface for register data
-interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword?: string; // Remove this from API call
-  termsAccepted: boolean;
-  newsletterSubscribe: boolean;
-}
 const Register: React.FC = () => {
+  const { register } = useAuthService();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
-    // confirmPassword: "",
+    confirmPassword: "",
     termsAccepted: false,
     newsletterSubscribe: false,
   });
@@ -104,23 +96,17 @@ const Register: React.FC = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        password_confirm: formData.password, // For now, use same password
-        // Remove fields that backend doesn't expect
+        password_confirm: formData.confirmPassword,
       };
 
       console.log("Sending registration data:", apiData);
 
       // Use the actual API call
-      const response = await authService.register(apiData);
+      const response = await register(apiData);
 
       // Handle successful registration
       if (response.status >= 200 && response.status < 300) {
         setShowSuccess(true);
-
-        // Store user data and token if available
-        if (response.data) {
-          localStorage.setItem("user_data", JSON.stringify(response.data));
-        }
 
         // Redirect to dashboard after success
         setTimeout(() => {
@@ -131,12 +117,16 @@ const Register: React.FC = () => {
           submit: response.message || "Registration failed. Please try again.",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
 
-      // Use the error message from authService
+      let errorMessage = "Something went wrong. Please try again.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       setErrors({
-        submit: error.message || "Something went wrong. Please try again.",
+        submit: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -178,7 +168,7 @@ const Register: React.FC = () => {
           <div className="text-center p-8 relative z-10">
             <div className="mb-8 relative group">
               <img 
-                src={register.image} 
+                src={registerContent.image} 
                 alt="Join TrackPulse" 
                 className="w-80 h-80 mx-auto object-cover rounded-2xl shadow-2xl dark:shadow-black/70 transition-all duration-700 group-hover:scale-105 group-hover:shadow-3xl dark:group-hover:shadow-black/80 border border-themed/20 dark:border-slate-600/40"
               />
@@ -215,7 +205,7 @@ const Register: React.FC = () => {
           {/* Enhanced Mobile background image */}
           <div className="lg:hidden absolute inset-0 opacity-5 dark:opacity-10">
             <img 
-              src={register.image} 
+              src={registerContent.image} 
               alt="" 
               className="w-full h-full object-cover"
             />
@@ -225,7 +215,7 @@ const Register: React.FC = () => {
           <div className="max-w-md w-full space-y-8 relative z-10">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-themed">
-                {register.title}
+                {registerContent.title}
               </h2>
               <p className="mt-2 text-sm text-muted">
                 Join thousands of music lovers today
@@ -282,7 +272,7 @@ const Register: React.FC = () => {
                     className="block text-sm font-medium text-themed dark:text-slate-300 mb-2"
                   >
                     <User className="w-4 h-4 inline mr-2" />
-                    {register.form.fields[0].label}
+                    {registerContent.form.fields[0].label}
                   </label>
                   <input
                     id="username"
@@ -292,7 +282,7 @@ const Register: React.FC = () => {
                     value={formData.username}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-themed/30 dark:border-slate-600/50 rounded-lg surface dark:bg-slate-800/60 text-themed dark:text-slate-200 placeholder-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-blue-400/50 focus:border-primary dark:focus:border-blue-400 transition-all duration-300 transform focus:scale-[1.02] hover:shadow-md dark:hover:shadow-black/30 backdrop-blur-sm hover:border-themed/50 dark:hover:border-slate-500/70"
-                    placeholder={register.form.fields[0].placeholder}
+                    placeholder={registerContent.form.fields[0].placeholder}
                   />
                   {errors.username && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -307,7 +297,7 @@ const Register: React.FC = () => {
                     className="block text-sm font-medium text-themed dark:text-slate-300 mb-2"
                   >
                     <Mail className="w-4 h-4 inline mr-2" />
-                    {register.form.fields[1].label}
+                    {registerContent.form.fields[1].label}
                   </label>
                   <input
                     id="email"
@@ -317,7 +307,7 @@ const Register: React.FC = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-themed/30 dark:border-slate-600/50 rounded-lg surface dark:bg-slate-800/60 text-themed dark:text-slate-200 placeholder-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-blue-400/50 focus:border-primary dark:focus:border-blue-400 transition-all duration-300 transform focus:scale-[1.02] hover:shadow-md dark:hover:shadow-black/30 backdrop-blur-sm hover:border-themed/50 dark:hover:border-slate-500/70"
-                    placeholder={register.form.fields[1].placeholder}
+                    placeholder={registerContent.form.fields[1].placeholder}
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
@@ -330,7 +320,7 @@ const Register: React.FC = () => {
                     className="block text-sm font-medium text-themed dark:text-slate-300 mb-2"
                   >
                     <Lock className="w-4 h-4 inline mr-2" />
-                    {register.form.fields[2].label}
+                    {registerContent.form.fields[2].label}
                   </label>
                   <div className="relative">
                     <input
@@ -341,7 +331,7 @@ const Register: React.FC = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 pr-12 border border-themed/30 dark:border-slate-600/50 rounded-lg surface dark:bg-slate-800/60 text-themed dark:text-slate-200 placeholder-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-blue-400/50 focus:border-primary dark:focus:border-blue-400 transition-all duration-300 transform focus:scale-[1.02] hover:shadow-md dark:hover:shadow-black/30 backdrop-blur-sm hover:border-themed/50 dark:hover:border-slate-500/70"
-                      placeholder={register.form.fields[2].placeholder}
+                      placeholder={registerContent.form.fields[2].placeholder}
                     />
                     <button
                       type="button"
@@ -355,8 +345,8 @@ const Register: React.FC = () => {
                       )}
                     </button>
                   </div>
-                  {register.form.fields[2].helperText && (
-                    <p className="mt-1 text-xs text-muted">{register.form.fields[2].helperText}</p>
+                  {registerContent.form.fields[2].helperText && (
+                    <p className="mt-1 text-xs text-muted">{registerContent.form.fields[2].helperText}</p>
                   )}
                   {errors.password && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -371,7 +361,7 @@ const Register: React.FC = () => {
                     className="block text-sm font-medium text-themed dark:text-slate-300 mb-2"
                   >
                     <Shield className="w-4 h-4 inline mr-2" />
-                    {register.form.fields[3].label}
+                    {registerContent.form.fields[3].label}
                   </label>
                   <div className="relative">
                     <input
@@ -382,7 +372,7 @@ const Register: React.FC = () => {
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 pr-12 border border-themed/30 dark:border-slate-600/50 rounded-lg surface dark:bg-slate-800/60 text-themed dark:text-slate-200 placeholder-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-blue-400/50 focus:border-primary dark:focus:border-blue-400 transition-all duration-300 transform focus:scale-[1.02] hover:shadow-md dark:hover:shadow-black/30 backdrop-blur-sm hover:border-themed/50 dark:hover:border-slate-500/70"
-                      placeholder={register.form.fields[3].placeholder}
+                      placeholder={registerContent.form.fields[3].placeholder}
                     />
                     <button
                       type="button"
@@ -489,7 +479,7 @@ const Register: React.FC = () => {
                     </svg>
                   )}
                   <span className="auth-button-text">
-                    {isLoading ? "Creating account..." : register.form.submitText}
+                    {isLoading ? "Creating account..." : registerContent.form.submitText}
                   </span>
                 </div>
               </button>

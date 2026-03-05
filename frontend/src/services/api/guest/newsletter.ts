@@ -1,27 +1,22 @@
-// import api from '../index';
-// import type { ApiResponse } from '../types';
+import api from '../index';
+import type { ApiResponse } from '../types';
 
-// export interface NewsletterSubscription {
-//   email: string;
-//   interests?: string[];
-// }
+export interface NewsletterSubscriptionData {
+  email: string;
+}
 
-// export const newsletterApi = {
-//   subscribe: async (data: NewsletterSubscription): Promise<ApiResponse<null>> => {
-//     try {
-//       // When API is ready:
-//       // const response = await api.post<ApiResponse<null>>('/newsletter/subscribe', data);
-//       // return response.data;
-      
-//       // Mock response
-//       return Promise.resolve({
-//         data: null,
-//         status: 200,
-//         message: 'Successfully subscribed to newsletter'
-//       });
-//     } catch (error) {
-//       console.error('Error subscribing to newsletter:', error);
-//       throw error;
-//     }
-//   }
-// };
+export const newsletterApi = {
+  subscribe: async (subscriptionData: NewsletterSubscriptionData): Promise<ApiResponse<any>> => {
+    try {
+      const response = await api.post('/guest/newsletter/subscribe/', subscriptionData);
+      return {
+        data: response.data,
+        status: response.status,
+        message: 'Subscribed to newsletter successfully'
+      };
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      throw error;
+    }
+  },
+};

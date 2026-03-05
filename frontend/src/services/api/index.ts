@@ -12,46 +12,21 @@ const api = axios.create({
   },
 });
 
-// SINGLE Request interceptor to add auth token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("auth_token");
-
-    // Add token to all requests except login/register
-    if (
-      token &&
-      config.url &&
-      !config.url.includes("/auth/login") &&
-      !config.url.includes("/auth/register")
-    ) {
-      // Use 'Token' for Django REST Framework TokenAuthentication
-      config.headers.Authorization = `Token ${token}`;
-      console.log(
-        `Adding auth token to request: ${config.method?.toUpperCase()} ${
-          config.url
-        }`
-      );
-    }
-
-    return config;
-  },
-  (error) => {
-    console.error("Request interceptor error:", error);
-    return Promise.reject(error);
-  }
-);
-
 // Response interceptor to handle common errors
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("auth_token");
 
-    // Add Bearer token to all requests except login/register
+    // Add Bearer token to all requests except login/register and guest endpoints
     if (
       token &&
+      token !== "undefined" &&
+      token !== "null" &&
       config.url &&
       !config.url.includes("/auth/login") &&
-      !config.url.includes("/auth/register")
+      !config.url.includes("/auth/register") &&
+      !config.url.includes("/auth/jwt/token") &&
+      !config.url.includes("/guest/")
     ) {
       // Use 'Bearer' for JWT authentication
       config.headers.Authorization = `Bearer ${token}`;
@@ -78,24 +53,14 @@ export default api;
 export * from "./types";
 export * from "./auth";
 
-// Guest services
-export * from "./guest/explore";
-export * from "./guest/contact";
-export * from "./guest/newsletter";
+// Admin services
+export * from "./admin/auditLogs";
 
 // User services
 export * from "./user/dashboard";
-export * from "./user/analytics";
-export * from "./user/reports";
+export * from "./user/profile";
 export * from "./user/bookmarks";
-
-// Admin services
-export * from "./admin/dashboard";
-export * from "./admin/users";
-export * from "./admin/metrics";
-export * from "./admin/reports";
-export * from "./admin/auditLogs";
-export * from "./admin/dataManagement";
+export * from "./user/reports";
 
 // Shared services
 export * from "./settings";

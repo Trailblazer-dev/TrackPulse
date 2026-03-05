@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Github, Apple, Mail, Lock } from "lucide-react";
-import { login } from "../utils/auth";
 import InlineSpinner from "../components/common/InlineSpinner";
 import AuthLayout from "../layouts/AuthLayout";
-import { authService } from "../services/api/auth";
+import { useAuthService } from "../services/api/auth";
+import { login as loginContent } from "../utils/auth";
 // Import logo images
 import FacebookLogo from "../assets/Facebook_logo_(square).png"; 
 import GoogleLogo from "../assets/google_logo.webp"; 
+
 const SignIn: React.FC = () => {
+  const { login } = useAuthService();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -76,7 +80,7 @@ const SignIn: React.FC = () => {
 
     try {
       // Use the authService for login
-      const response = await authService.login({
+      const response = await login({
         email: formData.email,
         password: formData.password,
         rememberMe: formData.rememberMe,
@@ -84,12 +88,21 @@ const SignIn: React.FC = () => {
 
       console.log("Login successful:", response);
 
-      // Redirect to dashboard on success
-      window.location.href = "/dashboard";
-    } catch (error: any) {
+      // Redirect based on user role
+      const role = response.data.user.role;
+      if (role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (error: unknown) {
       console.error("Login error:", error);
+      let errorMessage = "Invalid credentials. Please try again.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       setErrors({
-        submit: error.message || "Invalid credentials. Please try again.",
+        submit: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -140,7 +153,7 @@ const SignIn: React.FC = () => {
               )}
               
               <img 
-                src={login.image} 
+                src={loginContent.image} 
                 alt="Authentication" 
                 onLoad={handleImageLoad}
                 onError={handleImageError}
@@ -185,7 +198,7 @@ const SignIn: React.FC = () => {
           {/* Enhanced Mobile background image */}
           <div className="lg:hidden absolute inset-0 opacity-5 dark:opacity-10">
             <img 
-              src={login.image} 
+              src={loginContent.image} 
               alt="" 
               className="w-full h-full object-cover"
             />
@@ -199,7 +212,7 @@ const SignIn: React.FC = () => {
               <h2 className={`text-3xl font-bold text-themed transition-all duration-500 delay-500 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}>
-                {login.title}
+                {loginContent.title}
               </h2>
               <p className={`mt-2 text-sm text-muted transition-all duration-500 delay-700 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
@@ -218,7 +231,7 @@ const SignIn: React.FC = () => {
             <div className={`space-y-3 transition-all duration-500 delay-900 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}>
-              {login.socialAuth.map((social, index) => {
+              {loginContent.socialAuth && loginContent.socialAuth.map((social, index) => {
                 const getLogo = () => {
                   switch (social.provider) {
                     case 'google':
@@ -380,7 +393,7 @@ const SignIn: React.FC = () => {
                     <InlineSpinner size="sm" className="mr-2" />
                   ) : null}
                   <span className="auth-button-text">
-                    {isLoading ? "Signing in..." : login.form.submitText}
+                    {isLoading ? "Signing in..." : loginContent.form.submitText}
                   </span>
                 </div>
               </button>

@@ -1,57 +1,111 @@
-import  { useState, useEffect } from 'react'
-import { reports } from '../../utils/user/user'
-import { Calendar, FileText, Filter, Download, Clock } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { reportsApi } from '../../services/api/user/reports'
+import type { GeneratedReport, ReportTemplate } from '../../services/api/user/reports'
+import { Calendar, FileText, Filter, Download, Clock, Loader2, Plus } from 'lucide-react'
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState('recent')
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null)
+  const [recentReports, setRecentReports] = useState<GeneratedReport[]>([])
+  const [scheduledReports, setScheduledReports] = useState<GeneratedReport[]>([])
+  const [templates, setTemplates] = useState<ReportTemplate[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isTableScrollable, setIsTableScrollable] = useState(false)
 
   useEffect(() => {
-    // Check if device is mobile
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    
-    // Check if table needs horizontal scrolling
-    const checkTableWidth = () => {
-      const tables = document.querySelectorAll('.report-table-container')
-      tables.forEach(table => {
-        const container = table as HTMLElement
-        const content = container.querySelector('table') as HTMLElement
-        if (content && container.clientWidth < content.clientWidth) {
-          setIsTableScrollable(true)
-        } else {
-          setIsTableScrollable(false)
-        }
-      })
-    }
-    
-    // Initial checks
-    checkMobile()
-    
-    // Set resize listener
-    window.addEventListener('resize', () => {
-      checkMobile()
-      setTimeout(checkTableWidth, 100) // Delay to ensure DOM is updated
-    })
-    
-    // Run table width check after component mounts
-    setTimeout(checkTableWidth, 200)
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile)
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    // Show scroll hint if on mobile and there are reports
+    setIsTableScrollable(recentReports.length > 0);
+  }, [recentReports]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const [recentRes, scheduledRes, templatesRes] = await Promise.all([
+        reportsApi.getRecentReports(),
+        reportsApi.getScheduledReports(),
+        reportsApi.getTemplates()
+      ])
+      
+      // Ensure we have arrays even if API returns something else
+      setRecentReports(Array.isArray(recentRes.data) ? recentRes.data : [])
+      setScheduledReports(Array.isArray(scheduledRes.data) ? scheduledRes.data : [])
+      setTemplates(Array.isArray(templatesRes.data) ? templatesRes.data : [])
+      
+      setError(null)
+    } catch (err: any) {
+      console.error('Error fetching reports data:', err)
+      setError(err.message || 'Failed to load reports data.')
+    } finally {
+      setLoading(false)
     }
   }, [])
 
-  const handleTemplateSelect = (templateName: string) => {
-    setSelectedTemplate(templateName === selectedTemplate ? null : templateName)
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  const handleTemplateSelect = (templateId: number) => {
+    setSelectedTemplate(templateId === selectedTemplate ? null : templateId)
+  }
+
+  const handleGenerateReport = async (template: ReportTemplate) => {
+    try {
+      setGenerating(true)
+      await reportsApi.generateReport({
+        name: `${template.name} - ${new Date().toLocaleDateString()}`,
+        report_type: template.category,
+        template: template.id,
+        parameters: {}
+      })
+      // Refresh reports list
+      const recentRes = await reportsApi.getRecentReports()
+      setRecentReports(recentRes.data)
+      setActiveTab('recent')
+    } catch (err) {
+      console.error('Error generating report:', err)
+      alert('Failed to generate report.')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+        <p className="text-muted">Loading reports...</p>
+      </div>
+    )
   }
 
   return (
     <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-themed mb-4 sm:mb-6">Reports</h1>
+
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-700/50 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6 backdrop-blur-sm">
+          <p className="font-medium">Error loading reports</p>
+          <p className="text-sm opacity-90">{error}</p>
+          <button 
+            onClick={() => fetchData()}
+            className="mt-2 text-sm underline hover:no-underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
       
       {/* Tabs for navigation - horizontally scrollable on mobile */}
       <div className="mb-6 border-b border-themed/10 overflow-x-auto pb-1">
@@ -145,36 +199,50 @@ const Reports = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-themed/10">
-                  {reports.recentReports.reports.map((report, idx) => (
-                    <tr key={idx} className="hover:bg-themed/5 transition-colors">
-                      <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary mr-2 flex-shrink-0" />
-                          <span className="font-medium text-themed text-sm sm:text-base">{report.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-muted">{report.date}</td>
-                      <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          {report.type}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                          {report.status}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 sm:px-4 sm:py-4 text-right space-x-2 whitespace-nowrap">
-                        <button className="inline-flex items-center px-2 py-1 border border-themed/20 rounded text-[10px] sm:text-xs font-medium text-themed hover:bg-themed/5">
-                          View
-                        </button>
-                        <button className="inline-flex items-center px-2 py-1 border border-themed/20 rounded text-[10px] sm:text-xs font-medium text-themed hover:bg-themed/5">
-                          <Download className="h-3 w-3 mr-1" />
-                          <span className="hidden sm:inline">Download</span>
-                        </button>
+                  {recentReports.length > 0 ? (
+                    recentReports.map((report) => (
+                      <tr key={report.id} className="hover:bg-themed/5 transition-colors">
+                        <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary mr-2 flex-shrink-0" />
+                            <span className="font-medium text-themed text-sm sm:text-base">{report.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-muted">
+                          {new Date(report.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                            {report.report_type}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 sm:px-4 sm:py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${
+                            report.status === 'COMPLETED' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                          }`}>
+                            {report.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 sm:px-4 sm:py-4 text-right space-x-2 whitespace-nowrap">
+                          <button className="inline-flex items-center px-2 py-1 border border-themed/20 rounded text-[10px] sm:text-xs font-medium text-themed hover:bg-themed/5">
+                            View
+                          </button>
+                          {report.file_path && (
+                            <button className="inline-flex items-center px-2 py-1 border border-themed/20 rounded text-[10px] sm:text-xs font-medium text-themed hover:bg-themed/5">
+                              <Download className="h-3 w-3 mr-1" />
+                              <span className="hidden sm:inline">Download</span>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-10 text-center text-muted">
+                        No recent reports found.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -264,42 +332,44 @@ const Reports = () => {
           
           {/* Scheduled Reports Grid - responsive layout */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {reports.scheduledReports.reports.map((report, idx) => (
-              <div key={idx} className="surface rounded-xl shadow-themed-md p-4 border border-themed/10 hover:shadow-themed-lg transition-all duration-300">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium text-themed text-base line-clamp-1" title={report.name}>
-                    {report.name}
-                  </h3>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                    report.status === 'Scheduled' 
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                  }`}>
-                    {report.status}
-                  </span>
+            {scheduledReports.length > 0 ? (
+              scheduledReports.map((report) => (
+                <div key={report.id} className="surface rounded-xl shadow-themed-md p-4 border border-themed/10 hover:shadow-themed-lg transition-all duration-300">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-medium text-themed text-base line-clamp-1" title={report.name}>
+                      {report.name}
+                    </h3>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                      {report.status}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center text-muted text-xs mb-3">
+                    <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                    {report.scheduled_for ? new Date(report.scheduled_for).toLocaleString() : 'Not scheduled'}
+                  </div>
+                  
+                  <div className="flex items-center mb-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                      {report.report_type}
+                    </span>
+                  </div>
+                  
+                  <div className="border-t border-themed/10 pt-3 flex justify-between">
+                    <button className="text-xs text-primary hover:text-primary/80">
+                      Edit
+                    </button>
+                    <button className="text-xs text-red-600 hover:text-red-500">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="flex items-center text-muted text-xs mb-3">
-                  <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-                  {report.date}
-                </div>
-                
-                <div className="flex items-center mb-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                    {report.type}
-                  </span>
-                </div>
-                
-                <div className="border-t border-themed/10 pt-3 flex justify-between">
-                  <button className="text-xs text-primary hover:text-primary/80">
-                    Edit
-                  </button>
-                  <button className="text-xs text-red-600 hover:text-red-500">
-                    Cancel
-                  </button>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center text-muted border border-dashed border-themed/20 rounded-xl">
+                No scheduled reports found.
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}
@@ -307,81 +377,64 @@ const Reports = () => {
       {/* Templates Tab */}
       {activeTab === 'templates' && (
         <div className="space-y-6">
-          {/* Filter bar */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <button className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-              All
-            </button>
-            <button className="px-3 py-1.5 text-sm font-medium rounded-lg bg-themed/5 text-muted hover:bg-themed/10">
-              Financial
-            </button>
-            <button className="px-3 py-1.5 text-sm font-medium rounded-lg bg-themed/5 text-muted hover:bg-themed/10">
-              Analytics
-            </button>
-            <button className="px-3 py-1.5 text-sm font-medium rounded-lg bg-themed/5 text-muted hover:bg-themed/10">
-              Performance
-            </button>
-          </div>
-          
           {/* Templates List - accordion style for mobile */}
           <div className="space-y-4">
-            {reports.reportTemplates.templates.map((template, idx) => (
-              <div 
-                key={idx}
-                className={`surface rounded-xl shadow-themed-sm border border-themed/10 transition-all duration-300 ${
-                  selectedTemplate === template.name ? 'shadow-themed-md' : 'hover:shadow-themed'
-                }`}
-              >
+            {templates.length > 0 ? (
+              templates.map((template) => (
                 <div 
-                  className="p-4 cursor-pointer"
-                  onClick={() => handleTemplateSelect(template.name)}
+                  key={template.id}
+                  className={`surface rounded-xl shadow-themed-sm border border-themed/10 transition-all duration-300 ${
+                    selectedTemplate === template.id ? 'shadow-themed-md' : 'hover:shadow-themed'
+                  }`}
                 >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="rounded-lg w-8 h-8 flex items-center justify-center bg-primary/10 text-primary mr-3 flex-shrink-0">
-                        <FileText className="h-4 w-4" />
+                  <div 
+                    className="p-4 cursor-pointer"
+                    onClick={() => handleTemplateSelect(template.id)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <div className="rounded-lg w-8 h-8 flex items-center justify-center bg-primary/10 text-primary mr-3 flex-shrink-0">
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <h3 className="font-medium text-themed">{template.name}</h3>
                       </div>
-                      <h3 className="font-medium text-themed">{template.name}</h3>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-xs text-muted mr-3 hidden sm:block">{template.category}</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-muted transition-transform ${selectedTemplate === template.name ? 'transform rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
+                      <div className="flex items-center">
+                        <span className="text-xs text-muted mr-3 hidden sm:block">{template.category}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-muted transition-transform ${selectedTemplate === template.id ? 'transform rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Mobile-only category badge */}
-                  <div className="mt-2 sm:hidden">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                      {template.category}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Expandable content */}
-                {selectedTemplate === template.name && (
-                  <div className="px-4 pb-4 border-t border-themed/10 pt-3 -mt-1">
-                    <p className="text-sm text-muted mb-4">{template.description}</p>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <button className="inline-flex items-center px-3 py-1.5 border border-primary rounded-md text-xs font-medium text-primary hover:bg-primary/5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                        </svg>
-                        Create Report
-                      </button>
-                      <button className="inline-flex items-center px-3 py-1.5 border border-themed/20 rounded-md text-xs font-medium text-themed hover:bg-themed/5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.6 13.4A7 7 0 1 0 2 10a7 7 0 0 0 11.6 3.4L18 18l-1 1-3.4-3.4a7 7 0 0 0 0-2.2zM12 10a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
-                        </svg>
-                        Preview
-                      </button>
+                  {/* Expandable content */}
+                  {selectedTemplate === template.id && (
+                    <div className="px-4 pb-4 border-t border-themed/10 pt-3 -mt-1">
+                      <p className="text-sm text-muted mb-4">{template.description}</p>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <button 
+                          disabled={generating}
+                          onClick={() => handleGenerateReport(template)}
+                          className="inline-flex items-center px-3 py-1.5 border border-primary rounded-md text-xs font-medium text-primary hover:bg-primary/5 disabled:opacity-50"
+                        >
+                          {generating ? (
+                            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                          ) : (
+                            <Plus className="h-3.5 w-3.5 mr-1" />
+                          )}
+                          Generate Now
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="py-20 text-center text-muted border border-dashed border-themed/20 rounded-xl">
+                No report templates found.
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

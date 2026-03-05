@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { authService, type UserRole } from '../services/api/auth';
+import { useAuth } from '../contexts/UserContext';
+import type { UserRole } from '../services/api/auth';
 
 interface ProtectedRouteProps {
   requiredRole: UserRole | UserRole[];
@@ -13,8 +14,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   redirectTo = '/'
 }) => {
-  const isAuthenticated = authService.isAuthenticated();
-  const currentRole = authService.getCurrentRole();
+  const { token, user } = useAuth();
+  const isAuthenticated = !!token;
+  const currentRole = user?.role || 'guest';
   
   // If not authenticated at all, redirect to login
   if (!isAuthenticated) {

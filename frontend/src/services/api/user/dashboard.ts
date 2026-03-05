@@ -1,77 +1,86 @@
-// import api from '../index';
-// import type { ApiResponse } from '../types';
-// import { dashboard as mockDashboard } from '../../../utils/user/user';
+import api from "../index";
+import type {
+  TopArtist,
+  TopAlbum,
+  TopTrack,
+  TopCustomer,
+  RecentOrder,
+  MonthlySales,
+  GenreAnalysis,
+  CountryAnalysis,
+  DashboardSummary,
+  YearlyComparison,
+  SearchResult,
+} from "../../../types/analytics";
 
-// export interface DashboardData {
-//   stats: {
-//     title: string;
-//     value: string;
-//   }[];
-//   genreDistribution: {
-//     title: string;
-//     chartData: {
-//       labels: string[];
-//       datasets: {
-//         data: number[];
-//         backgroundColor: string[];
-//       }[];
-//     };
-//   };
-//   topTracks: {
-//     title: string;
-//     tracks: {
-//       title: string;
-//       artist: string;
-//       streams: string;
-//     }[];
-//   };
-//   salesTrend: {
-//     title: string;
-//     chartData: {
-//       labels: string[];
-//       datasets: {
-//         label: string;
-//         data: number[];
-//         fill: boolean;
-//         borderColor: string;
-//       }[];
-//     };
-//   };
-//   demographics: {
-//     title: string;
-//     chartData: {
-//       labels: string[];
-//       datasets: {
-//         label: string;
-//         data: number[];
-//         backgroundColor: string;
-//       }[];
-//     };
-//   };
-// }
+export const dashboardApi = {
+  getTopArtists: async (): Promise<TopArtist[]> => {
+    const response = await api.get<TopArtist[]>("/analytics/artists/top_artists/");
+    return response.data;
+  },
 
-// export const dashboardApi = {
-//   getDashboardData: async (): Promise<ApiResponse<DashboardData>> => {
-//     try {
-//       // When API is ready:
-//       // const response = await api.get<ApiResponse<DashboardData>>('/user/dashboard');
-//       // return response.data;
-      
-//       // Return mock data for now
-//       return Promise.resolve({
-//         data: {
-//           stats: mockDashboard.belt,
-//           genreDistribution: mockDashboard.genre,
-//           topTracks: mockDashboard.topTracks,
-//           salesTrend: mockDashboard.sales,
-//           demographics: mockDashboard.demographics
-//         },
-//         status: 200,
-//         message: 'Dashboard data retrieved successfully'
-//       });
-//     } catch (error) {
-//       console.error('Error fetching dashboard data:', error);
-//       throw error;
-//     }
-//   }
-// };
+  getTopAlbums: async (): Promise<TopAlbum[]> => {
+    const response = await api.get<TopAlbum[]>("/analytics/albums/top_albums/");
+    return response.data;
+  },
+
+  getTopTracks: async (): Promise<TopTrack[]> => {
+    const response = await api.get<TopTrack[]>("/analytics/tracks/top_tracks/");
+    return response.data;
+  },
+
+  getTracksByGenre: async (genreId: number): Promise<TopTrack[]> => {
+    const response = await api.get<TopTrack[]>(`/analytics/tracks/by_genre/?genre_id=${genreId}`);
+    return response.data;
+  },
+
+  getTopCustomers: async (): Promise<TopCustomer[]> => {
+    const response = await api.get<TopCustomer[]>("/analytics/customers/top_customers/");
+    return response.data;
+  },
+
+  getCustomersByCountry: async (country: string): Promise<TopCustomer[]> => {
+    const response = await api.get<TopCustomer[]>(`/analytics/customers/by_country/?country=${country}`);
+    return response.data;
+  },
+
+  getRecentOrders: async (limit: number = 10): Promise<RecentOrder[]> => {
+    const response = await api.get<RecentOrder[]>(`/analytics/invoices/recent_orders/?limit=${limit}`);
+    return response.data;
+  },
+
+  getSalesOverview: async (startDate?: string, endDate?: string): Promise<MonthlySales[]> => {
+    let url = "/analytics/analytics/sales_overview/";
+    const params = new URLSearchParams();
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
+    if (params.toString()) url += `?${params.toString()}`;
+    const response = await api.get<MonthlySales[]>(url);
+    return response.data;
+  },
+
+  getGenreAnalysis: async (): Promise<GenreAnalysis[]> => {
+    const response = await api.get<GenreAnalysis[]>("/analytics/analytics/genre_analysis/");
+    return response.data;
+  },
+
+  getCountryAnalysis: async (): Promise<CountryAnalysis[]> => {
+    const response = await api.get<CountryAnalysis[]>("/analytics/analytics/country_analysis/");
+    return response.data;
+  },
+
+  getDashboardSummary: async (): Promise<DashboardSummary> => {
+    const response = await api.get<DashboardSummary>("/analytics/analytics/dashboard_summary/");
+    return response.data;
+  },
+
+  getYearlyComparison: async (): Promise<YearlyComparison[]> => {
+    const response = await api.get<YearlyComparison[]>("/analytics/analytics/yearly_comparison/");
+    return response.data;
+  },
+
+  searchAnalytics: async (query: string): Promise<SearchResult> => {
+    const response = await api.get<SearchResult>(`/analytics/analytics/search_analytics/?q=${query}`);
+    return response.data;
+  },
+};

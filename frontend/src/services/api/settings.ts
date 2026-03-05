@@ -1,4 +1,3 @@
-import api from './index';
 import type { ApiResponse } from './types';
 import { userSettings, adminSettings } from '../../utils/settings';
 

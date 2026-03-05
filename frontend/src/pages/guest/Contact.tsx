@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { contact } from '../../utils/guest/guest'
+import { contactApi } from '../../services/api/guest/contact'
+import type { ContactFormData } from '../../services/api/guest/contact'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
-    phone: '',
     message: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -18,10 +21,22 @@ const Contact = () => {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission here
-    console.log('Form submitted:', formData)
+    setLoading(true)
+    setError(null)
+    setSuccess(false)
+
+    try {
+      await contactApi.submitContactForm(formData)
+      setSuccess(true)
+      setFormData({ name: '', email: '', message: '' })
+    } catch (err) {
+      setError('Failed to send message. Please try again later.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -41,69 +56,59 @@ const Contact = () => {
           {/* Contact Form */}
           <div className="surface rounded-xl shadow-themed-md hover:shadow-themed-lg transition-all duration-300 border border-themed/10 p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {contact.form.fields.slice(0, 2).map((field) => (
-                  <div key={field.id}>
-                    <label htmlFor={field.id} className="block text-sm font-medium text-themed mb-2 transition-colors">
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-themed mb-2 transition-colors">
+                        Name <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type={field.type}
-                      id={field.id}
-                      name={field.id}
-                      value={formData[field.id as keyof typeof formData]}
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
                       onChange={handleChange}
-                      placeholder={field.placeholder}
-                      required={field.required}
+                      placeholder="Enter your name"
+                      required
                       className="w-full px-4 py-3 border border-themed/30 rounded-lg surface text-themed placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
                     />
-                  </div>
-                ))}
-              </div>
-
-              {/* Email and Phone fields */}
-              {contact.form.fields.slice(2, 4).map((field) => (
-                <div key={field.id}>
-                  <label htmlFor={field.id} className="block text-sm font-medium text-themed mb-2 transition-colors">
-                    {field.label} {field.required && <span className="text-red-500">*</span>}
-                  </label>
-                  <input
-                    type={field.type}
-                    id={field.id}
-                    name={field.id}
-                    value={formData[field.id as keyof typeof formData]}
-                    onChange={handleChange}
-                    placeholder={field.placeholder}
-                    required={field.required}
-                    className="w-full px-4 py-3 border border-themed/30 rounded-lg surface text-themed placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
-                  />
                 </div>
-              ))}
-
-              {/* Message field */}
-              {contact.form.fields.slice(4).map((field) => (
-                <div key={field.id}>
-                  <label htmlFor={field.id} className="block text-sm font-medium text-themed mb-2 transition-colors">
-                    {field.label} {field.required && <span className="text-red-500">*</span>}
-                  </label>
-                  <textarea
-                    id={field.id}
-                    name={field.id}
-                    value={formData[field.id as keyof typeof formData]}
-                    onChange={handleChange}
-                    placeholder={field.placeholder}
-                    required={field.required}
-                    rows={6}
-                    className="w-full px-4 py-3 border border-themed/30 rounded-lg surface text-themed placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 resize-vertical"
-                  />
+                <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-themed mb-2 transition-colors">
+                        Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email address"
+                      required
+                      className="w-full px-4 py-3 border border-themed/30 rounded-lg surface text-themed placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                    />
                 </div>
-              ))}
-
+                <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-themed mb-2 transition-colors">
+                        Message <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      placeholder="What would you like to tell us?"
+                      required
+                      rows={6}
+                      className="w-full px-4 py-3 border border-themed/30 rounded-lg surface text-themed placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 resize-vertical"
+                    />
+                </div>
+              {error && <p className="text-red-500">{error}</p>}
+              {success && <p className="text-green-500">Message sent successfully!</p>}
               <button
                 type="submit"
                 className="auth-submit-button font-semibold"
+                disabled={loading}
               >
-                {contact.form.submitText}
+                {loading ? 'Sending...' : contact.form.submitText}
               </button>
             </form>
           </div>

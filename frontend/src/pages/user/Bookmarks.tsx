@@ -1,52 +1,50 @@
-import { useState, useEffect } from 'react'
-import { bookmarks } from '../../utils/user/user'
-import { Search, Clock, Music, Heart } from 'lucide-react'
-
-// Define types that match the actual structure in bookmarks
-interface TrackItem {
-  title: string;
-  artist: string;
-  duration: string;
-  dateAdded: string;
-}
-
-interface PlaylistItem {
-  name: string;
-  creator: string;
-  tracks: number;
-  duration: string;
-}
+import { useState, useEffect, useCallback } from 'react'
+import { bookmarksApi } from '../../services/api/user/bookmarks'
+import type { Bookmark } from '../../services/api/user/bookmarks'
+import { Search, Clock, Music, Heart, Loader2 } from 'lucide-react'
 
 const Bookmarks = () => {
   const [activeTab, setActiveTab] = useState('tracks');
   const [searchQuery, setSearchQuery] = useState('');
+  const [bookmarkedTracks, setBookmarkedTracks] = useState<Bookmark[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // Check responsive behavior using resize listener
-  useEffect(() => {
-    const handleResize = () => {
-      // Apply any responsive UI adjustments directly here if needed
-    };
-    
-    // Initial check
-    handleResize();
-    
-    // Add resize listener
-    window.addEventListener('resize', handleResize);
-    
-    // Clean up
-    return () => window.removeEventListener('resize', handleResize);
+  const fetchBookmarks = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await bookmarksApi.getBookmarks();
+      setBookmarkedTracks(response.data.results);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching bookmarks:', err);
+      setError('Failed to load bookmarks.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Filter bookmarks based on search query - updated to match the actual structure
-  const filteredBookmarks = {
-    tracks: bookmarks.savedTracks.tracks.filter(
-      (track: TrackItem) => track.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-               track.artist.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-    playlists: bookmarks.savedPlaylists.playlists.filter(
-      (playlist: PlaylistItem) => playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  useEffect(() => {
+    fetchBookmarks();
+  }, [fetchBookmarks]);
+
+  const handleRemoveBookmark = async (trackId: number) => {
+    try {
+      await bookmarksApi.removeBookmark(trackId);
+      // Update local state to remove the bookmark
+      setBookmarkedTracks(prev => prev.filter(b => b.track !== trackId));
+    } catch (err) {
+      console.error('Error removing bookmark:', err);
+      alert('Failed to remove bookmark.');
+    }
   };
+
+  // Filter bookmarks based on search query
+  const filteredTracks = bookmarkedTracks.filter(
+    (bookmark) => 
+      (bookmark.track_details.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
+      (bookmark.track_details.album?.artist?.name?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -60,7 +58,7 @@ const Bookmarks = () => {
             placeholder="Search your bookmarks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-themed/20 surface"
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-themed/20 bg-surface text-themed"
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted" />
         </div>
@@ -98,67 +96,70 @@ const Bookmarks = () => {
         </div>
       </div>
 
-      {/* Display content based on active tab */}
-      {activeTab === 'tracks' && (
-        <div>
-          {filteredBookmarks.tracks.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredBookmarks.tracks.map((track: TrackItem, index: number) => (
-                <div key={index} className="surface rounded-lg shadow-themed-sm p-4 border border-themed/10 flex flex-col">
-                  {/* Track content */}
-                  <div className="mb-4">
-                    <div className="font-semibold text-lg text-themed mb-1">{track.title}</div>
-                    <div className="text-muted text-sm">{track.artist}</div>
-                  </div>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-themed/10">
-                    <div className="flex items-center text-xs text-muted">
-                      <Clock className="h-3.5 w-3.5 mr-1" />
-                      <span>{track.duration}</span>
-                    </div>
-                    <button className="text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                      <Heart className="h-4 w-4 fill-current" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10">
-              <p className="text-muted text-lg">No bookmarked tracks found</p>
-            </div>
-          )}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+          {error}
         </div>
       )}
 
-      {activeTab === 'playlists' && (
-        <div>
-          {filteredBookmarks.playlists.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredBookmarks.playlists.map((playlist: PlaylistItem, index: number) => (
-                <div key={index} className="surface rounded-lg shadow-themed-sm p-4 border border-themed/10 flex flex-col">
-                  {/* Playlist content - updated property names */}
-                  <div className="mb-4">
-                    <div className="font-semibold text-lg text-themed mb-1">{playlist.name}</div>
-                    <div className="text-muted text-sm">{playlist.creator}</div>
-                  </div>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-themed/10">
-                    <div className="flex items-center text-xs text-muted">
-                      <Music className="h-3.5 w-3.5 mr-1" />
-                      <span>{playlist.tracks} tracks</span>
+      {/* Display content based on active tab */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+          <p className="text-muted">Loading your bookmarks...</p>
+        </div>
+      ) : (
+        <>
+          {activeTab === 'tracks' && (
+            <div>
+              {filteredTracks.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredTracks.map((bookmark) => (
+                    <div key={bookmark.id} className="surface rounded-lg shadow-themed-sm p-4 border border-themed/10 flex flex-col hover:shadow-themed-md transition-shadow">
+                      <div className="mb-4">
+                        <div className="font-semibold text-lg text-themed mb-1 truncate" title={bookmark.track_details.name}>
+                          {bookmark.track_details.name}
+                        </div>
+                        <div className="text-muted text-sm truncate">
+                          {bookmark.track_details.album?.artist?.name || 'Unknown Artist'}
+                        </div>
+                        <div className="text-muted text-xs mt-1 truncate italic">
+                          {bookmark.track_details.album?.title}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-themed/10">
+                        <div className="flex items-center text-xs text-muted">
+                          <Clock className="h-3.5 w-3.5 mr-1" />
+                          <span>{Math.floor(bookmark.track_details.duration_seconds / 60)}:{(bookmark.track_details.duration_seconds % 60).toFixed(0).padStart(2, '0')}</span>
+                        </div>
+                        <button 
+                          onClick={() => handleRemoveBookmark(bookmark.track)}
+                          className="text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1"
+                          title="Remove bookmark"
+                        >
+                          <Heart className="h-5 w-5 fill-current" />
+                        </button>
+                      </div>
                     </div>
-                    <button className="text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                      <Heart className="h-4 w-4 fill-current" />
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-20 bg-accent/30 rounded-xl border border-dashed border-themed/20">
+                  <Heart className="h-12 w-12 text-muted mx-auto mb-4 opacity-20" />
+                  <p className="text-muted text-lg">No bookmarked tracks found</p>
+                  {searchQuery && <p className="text-sm text-muted mt-2">Try a different search query</p>}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-10">
+          )}
+
+          {activeTab === 'playlists' && (
+            <div className="text-center py-20 bg-accent/30 rounded-xl border border-dashed border-themed/20">
+              <Music className="h-12 w-12 text-muted mx-auto mb-4 opacity-20" />
               <p className="text-muted text-lg">No bookmarked playlists found</p>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   )

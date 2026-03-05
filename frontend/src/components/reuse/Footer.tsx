@@ -1,7 +1,31 @@
+import { useState } from 'react'
 import { footer } from '../../utils/footer'
 import { ExternalLink, ArrowRight } from 'lucide-react'
+import { newsletterApi } from '../../services/api/guest/newsletter'
 
 const Footer = () => {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setSuccess(false)
+    try {
+      await newsletterApi.subscribe({ email })
+      setSuccess(true)
+      setEmail('')
+    } catch (err) {
+      setError('Failed to subscribe. Please try again.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <footer className="footer-section">
       {/* Compact CTA Section */}
@@ -153,18 +177,22 @@ const Footer = () => {
               {/* Newsletter Signup */}
               <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
                 <span className="text-muted font-medium text-sm sm:text-base">Stay updated:</span>
-                <div className="flex w-full sm:w-auto max-w-sm">
+                <form onSubmit={handleSubscribe} className="flex w-full sm:w-auto max-w-sm">
                   <input
                     type="email"
                     placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="newsletter-input px-3 sm:px-4 py-2 rounded-l-lg border focus:outline-none focus:border-blue-500 transition-colors duration-200 flex-1 text-sm sm:text-base"
                   />
-                  <button className="btn-primary px-4 sm:px-6 py-2 rounded-r-lg font-medium text-sm sm:text-base">
-                    Subscribe
+                  <button type="submit" disabled={loading} className="btn-primary px-4 sm:px-6 py-2 rounded-r-lg font-medium text-sm sm:text-base">
+                    {loading ? 'Subscribing...' : 'Subscribe'}
                   </button>
-                </div>
+                </form>
               </div>
             </div>
+            {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+            {success && <p className="text-green-500 text-xs mt-2">Thank you for subscribing!</p>}
           </div>
 
           {/* Copyright */}
