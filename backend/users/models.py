@@ -138,3 +138,17 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
+
+
+class TrackBookmark(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name='bookmarks')
+    track = models.ForeignKey('analytics.Track', on_delete=models.CASCADE, related_name='bookmarked_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'track_bookmark'
+        unique_together = ('user', 'track')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.track.name}"

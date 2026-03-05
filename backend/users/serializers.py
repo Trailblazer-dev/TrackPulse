@@ -1,8 +1,28 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 
-from .models import UserAccount, UserProfile
+from .models import UserAccount, UserProfile, TrackBookmark
 
+
+class TrackBookmarkSerializer(serializers.ModelSerializer):
+    from analytics.serializers import TrackSerializer
+    track_details = TrackSerializer(source='track', read_only=True)
+    
+    class Meta:
+        model = TrackBookmark
+        fields = ['id', 'track', 'track_details', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        track = attrs.get('track')
+        if TrackBookmark.objects.filter(user=user, track=track).exists():
+            raise serializers.ValidationError("This track is already bookmarked.")
+        return attrs
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

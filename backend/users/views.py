@@ -1,15 +1,41 @@
-from rest_framework import status, generics
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status, generics, viewsets
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
-from .models import UserProfile
-from .serializers import UserRegistrationSerializer, UserProfileSerializer, UserSerializer
+from .models import UserProfile, TrackBookmark
+from .serializers import UserRegistrationSerializer, UserProfileSerializer, UserSerializer, TrackBookmarkSerializer
 from .tokens import CustomTokenObtainPairSerializer
 
 User = get_user_model()
+
+
+class TrackBookmarkViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for viewing and editing track bookmarks.
+    """
+    serializer_class = TrackBookmarkSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return TrackBookmark.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['delete'], url_path='tracks/(?P<track_id>[^/.]+)')
+    def remove_by_track(self, request, track_id=None):
+        """
+        Remove a bookmark by track ID.
+        """
+        try:
+            bookmark = TrackBookmark.objects.get(user=request.user, track_id=track_id)
+            bookmark.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except TrackBookmark.DoesNotExist:
+            return Response({'error': 'Bookmark not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
@@ -30,7 +56,8 @@ def register(request):
             'refresh': str(refresh),
             'user_id': str(user.user_id),
             'username': user.username,
-            'email': user.email
+            'email': user.email,
+            'role': user.role
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,7 +85,8 @@ def login(request):
                     'access': str(access_token),
                     'user_id': str(user.user_id),
                     'username': user.username,
-                    'email': user.email
+                    'email': user.email,
+                    'role': user.role
                 }, status=status.HTTP_200_OK)
             except Exception as e:
                 print(f"JWT Token generation error: {e}")
